@@ -1,0 +1,27 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    namespace 'com.kaustubhvats.googlesignin'
+    compileSdk 36
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // Provided by the game at runtime.
+    compileOnly 'org.godotengine:godot:4.3.0.stable'
+    // Must match the list in addons/google_signin/editor_plugin.gd.
+    implementation 'androidx.credentials:credentials:1.3.0'
+    implementation 'androidx.credentials:credentials-play-services-auth:1.3.0'
+    implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
+}

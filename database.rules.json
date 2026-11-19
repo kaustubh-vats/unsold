@@ -1,0 +1,38 @@
+{
+  "rules": {
+    "time_probe": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "rooms": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && (!data.exists() || data.child('meta/host').val() === auth.uid)",
+        "meta": {
+          "host": {
+            ".write": "auth != null && data.parent().parent().child('players').child(auth.uid).exists()"
+          }
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            "name": { ".validate": "newData.isString() && newData.val().length <= 16" }
+          }
+        },
+        "auction": {
+          ".write": "auth != null && data.parent().child('players').child(auth.uid).exists()",
+          ".validate": "!data.exists() || !newData.exists() || newData.child('pid').val() !== data.child('pid').val() || newData.child('round').val() !== data.child('round').val() || newData.child('bid').val() >= data.child('bid').val()"
+        },
+        "teams": {
+          "$tid": {
+            "xi": {
+              ".write": "auth != null && data.parent().parent().parent().child('players').child(auth.uid).child('team').val() === $tid"
+            }
+          }
+        }
+      }
+    }
+  }
+}

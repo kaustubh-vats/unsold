@@ -1,0 +1,2157 @@
+{
+ "_format": [
+  "name",
+  "country",
+  "role",
+  "bat",
+  "bowl",
+  "base_price_lakh",
+  "capped",
+  "trait"
+ ],
+ "_roles": "BAT batter, WK wicket-keeper, AR all-rounder, PACE fast bowler, SPIN spinner",
+ "_traits": "op opener, fin finisher, pp powerplay bowler, dth death bowler, anc anchor",
+ "players": [
+  [
+   "Vikram Kohlar",
+   "IND",
+   "BAT",
+   94,
+   10,
+   200,
+   1,
+   "anc"
+  ],
+  [
+   "Rohan Sharvan",
+   "IND",
+   "BAT",
+   90,
+   12,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Shubham Gilani",
+   "IND",
+   "BAT",
+   89,
+   8,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Yashvardhan Jaiswant",
+   "IND",
+   "BAT",
+   90,
+   15,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Suryansh Yadwal",
+   "IND",
+   "BAT",
+   92,
+   8,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Shreyansh Iyengar",
+   "IND",
+   "BAT",
+   85,
+   12,
+   200,
+   1,
+   "anc"
+  ],
+  [
+   "Rituraj Gaikar",
+   "IND",
+   "BAT",
+   85,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Tilakraj Varmani",
+   "IND",
+   "BAT",
+   83,
+   30,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Rinkesh Singla",
+   "IND",
+   "BAT",
+   82,
+   5,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Sai Sudhakar",
+   "IND",
+   "BAT",
+   84,
+   5,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Devansh Padikar",
+   "IND",
+   "BAT",
+   75,
+   5,
+   100,
+   1,
+   "op"
+  ],
+  [
+   "Prithviraj Shahane",
+   "IND",
+   "BAT",
+   72,
+   5,
+   75,
+   1,
+   "op"
+  ],
+  [
+   "Mayur Agarwade",
+   "IND",
+   "BAT",
+   72,
+   10,
+   75,
+   1,
+   "op"
+  ],
+  [
+   "Ajay Rahatekar",
+   "IND",
+   "BAT",
+   74,
+   5,
+   150,
+   1,
+   "anc"
+  ],
+  [
+   "Shekhar Dhawale",
+   "IND",
+   "BAT",
+   76,
+   5,
+   100,
+   1,
+   "op"
+  ],
+  [
+   "Ranjit Patwardhan",
+   "IND",
+   "BAT",
+   80,
+   5,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Abhinav Sharvil",
+   "IND",
+   "BAT",
+   84,
+   45,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Manan Pandit",
+   "IND",
+   "BAT",
+   70,
+   5,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Nitin Ranade",
+   "IND",
+   "BAT",
+   76,
+   30,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Rishav Pantulu",
+   "IND",
+   "WK",
+   89,
+   5,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Kunal Rahulkar",
+   "IND",
+   "WK",
+   87,
+   5,
+   200,
+   1,
+   "anc"
+  ],
+  [
+   "Sanjay Samuel",
+   "IND",
+   "WK",
+   86,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Ishaan Kishore",
+   "IND",
+   "WK",
+   82,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Dhairya Jurewal",
+   "IND",
+   "WK",
+   78,
+   5,
+   100,
+   1,
+   "fin"
+  ],
+  [
+   "Jatin Sharad",
+   "IND",
+   "WK",
+   76,
+   5,
+   100,
+   1,
+   "fin"
+  ],
+  [
+   "Mahesh Dhonde",
+   "IND",
+   "WK",
+   78,
+   5,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Dinkar Karthikeyan",
+   "IND",
+   "WK",
+   74,
+   5,
+   100,
+   1,
+   "fin"
+  ],
+  [
+   "Prabhjot Singhania",
+   "IND",
+   "WK",
+   76,
+   5,
+   75,
+   1,
+   "op"
+  ],
+  [
+   "Hardeep Pandharkar",
+   "IND",
+   "AR",
+   84,
+   80,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Rajendra Jadhavji",
+   "IND",
+   "AR",
+   80,
+   84,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Aksh Patelia",
+   "IND",
+   "AR",
+   78,
+   84,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Warren Sundaram",
+   "IND",
+   "AR",
+   70,
+   78,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Kunal Pandharkar",
+   "IND",
+   "AR",
+   68,
+   76,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Nikhil Kumar Reddappa",
+   "IND",
+   "AR",
+   76,
+   68,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Sharad Thakral",
+   "IND",
+   "AR",
+   60,
+   74,
+   100,
+   1,
+   "dth"
+  ],
+  [
+   "Rehan Paragji",
+   "IND",
+   "AR",
+   80,
+   55,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Raunak Tewari",
+   "IND",
+   "AR",
+   72,
+   52,
+   75,
+   1,
+   "fin"
+  ],
+  [
+   "Shivansh Dubash",
+   "IND",
+   "AR",
+   82,
+   50,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Venkatraman Iyyappa",
+   "IND",
+   "AR",
+   78,
+   48,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Shahzad Ahmedi",
+   "IND",
+   "AR",
+   62,
+   70,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Vijendra Shankaran",
+   "IND",
+   "AR",
+   66,
+   50,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Deepesh Hoodani",
+   "IND",
+   "AR",
+   68,
+   45,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Jaspal Bumrao",
+   "IND",
+   "PACE",
+   15,
+   97,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Mohammad Shamsher",
+   "IND",
+   "PACE",
+   15,
+   88,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Mehboob Sirajuddin",
+   "IND",
+   "PACE",
+   10,
+   85,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Arshpreet Singhal",
+   "IND",
+   "PACE",
+   12,
+   88,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Bhuvan Kumaran",
+   "IND",
+   "PACE",
+   25,
+   84,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Harsh Patelkar",
+   "IND",
+   "PACE",
+   30,
+   80,
+   150,
+   1,
+   "dth"
+  ],
+  [
+   "Aveek Khanna",
+   "IND",
+   "PACE",
+   10,
+   76,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Prasad Krishnan",
+   "IND",
+   "PACE",
+   8,
+   80,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Mukund Kumawat",
+   "IND",
+   "PACE",
+   8,
+   75,
+   100,
+   1,
+   "dth"
+  ],
+  [
+   "Deepanshu Chaharia",
+   "IND",
+   "PACE",
+   35,
+   80,
+   150,
+   1,
+   "pp"
+  ],
+  [
+   "Usman Mallick",
+   "IND",
+   "PACE",
+   8,
+   70,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Mohit Khandelwal",
+   "IND",
+   "PACE",
+   10,
+   74,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Khalid Ahmadi",
+   "IND",
+   "PACE",
+   8,
+   77,
+   100,
+   1,
+   "pp"
+  ],
+  [
+   "Tushit Deshmane",
+   "IND",
+   "PACE",
+   8,
+   72,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Ansh Deepankar",
+   "IND",
+   "PACE",
+   12,
+   73,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Yashpal Dayalu",
+   "IND",
+   "PACE",
+   8,
+   75,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Harshvardhan Ranawat",
+   "IND",
+   "PACE",
+   20,
+   79,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Manav Yadavendra",
+   "IND",
+   "PACE",
+   5,
+   80,
+   150,
+   1,
+   ""
+  ],
+  [
+   "T Natesan",
+   "IND",
+   "PACE",
+   5,
+   80,
+   150,
+   1,
+   "dth"
+  ],
+  [
+   "Sudeep Sharman",
+   "IND",
+   "PACE",
+   8,
+   76,
+   75,
+   1,
+   "dth"
+  ],
+  [
+   "Ishwar Shastry",
+   "IND",
+   "PACE",
+   8,
+   70,
+   75,
+   1,
+   "pp"
+  ],
+  [
+   "Umang Yadavrao",
+   "IND",
+   "PACE",
+   12,
+   70,
+   75,
+   1,
+   "pp"
+  ],
+  [
+   "Navneet Sainath",
+   "IND",
+   "PACE",
+   10,
+   68,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Kulbhushan Yadavji",
+   "IND",
+   "SPIN",
+   15,
+   89,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Yatindra Chahalia",
+   "IND",
+   "SPIN",
+   5,
+   88,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Rupesh Bishwas",
+   "IND",
+   "SPIN",
+   10,
+   82,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Vasant Chakrapani",
+   "IND",
+   "SPIN",
+   5,
+   87,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Ravishankar Ashwath",
+   "IND",
+   "SPIN",
+   45,
+   82,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Rajiv Chaharia",
+   "IND",
+   "SPIN",
+   15,
+   74,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Amol Mishrikoti",
+   "IND",
+   "SPIN",
+   15,
+   70,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Pankaj Chawlani",
+   "IND",
+   "SPIN",
+   15,
+   74,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Manoj Markandeyan",
+   "IND",
+   "SPIN",
+   10,
+   70,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Saket Kishorekar",
+   "IND",
+   "SPIN",
+   15,
+   76,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Suyog Sharmaji",
+   "IND",
+   "SPIN",
+   5,
+   72,
+   75,
+   1,
+   ""
+  ],
+  [
+   "Damien Warnock",
+   "AUS",
+   "BAT",
+   83,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Tristan Headley",
+   "AUS",
+   "BAT",
+   91,
+   25,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Jack Fraser-McGuire",
+   "AUS",
+   "BAT",
+   82,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Stuart Smithers",
+   "AUS",
+   "BAT",
+   76,
+   10,
+   200,
+   1,
+   "anc"
+  ],
+  [
+   "Frikkie du Plessen",
+   "SA",
+   "BAT",
+   82,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Dawid Millard",
+   "SA",
+   "BAT",
+   82,
+   5,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Arno Markham",
+   "SA",
+   "BAT",
+   80,
+   45,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Kade Willamore",
+   "NZ",
+   "BAT",
+   78,
+   8,
+   200,
+   1,
+   "anc"
+  ],
+  [
+   "Flynn Allenby",
+   "NZ",
+   "BAT",
+   78,
+   5,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Harvey Brookes",
+   "ENG",
+   "BAT",
+   83,
+   8,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Shimon Hetmore",
+   "WI",
+   "BAT",
+   80,
+   5,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Romel Powers",
+   "WI",
+   "BAT",
+   76,
+   15,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Tom Davidge",
+   "AUS",
+   "BAT",
+   80,
+   8,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Riaan Rousseau",
+   "SA",
+   "BAT",
+   76,
+   5,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Josh Butterfield",
+   "ENG",
+   "WK",
+   90,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Piers Saltmarsh",
+   "ENG",
+   "WK",
+   87,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Hendrik Klaver",
+   "SA",
+   "WK",
+   91,
+   5,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Quentin de Kaap",
+   "SA",
+   "WK",
+   84,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Nicholai Purandas",
+   "WI",
+   "WK",
+   89,
+   5,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Rahimullah Gulbahar",
+   "AFG",
+   "WK",
+   80,
+   5,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Dayne Conroy",
+   "NZ",
+   "WK",
+   82,
+   5,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Theo Stubbington",
+   "SA",
+   "WK",
+   82,
+   20,
+   150,
+   1,
+   "fin"
+  ],
+  [
+   "Jordan Inglesby",
+   "AUS",
+   "WK",
+   80,
+   5,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Jonah Barstowe",
+   "ENG",
+   "WK",
+   80,
+   5,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Ruan Rickards",
+   "SA",
+   "WK",
+   78,
+   5,
+   100,
+   1,
+   "op"
+  ],
+  [
+   "Grant Maxfield",
+   "AUS",
+   "AR",
+   80,
+   66,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Andrell Rossiter",
+   "WI",
+   "AR",
+   84,
+   74,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Sunith Narayan",
+   "WI",
+   "AR",
+   78,
+   87,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Myles Marshwood",
+   "AUS",
+   "AR",
+   82,
+   60,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Marco Stoyanis",
+   "AUS",
+   "AR",
+   80,
+   62,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Callum Greenway",
+   "AUS",
+   "AR",
+   80,
+   70,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Lewis Livingwood",
+   "ENG",
+   "AR",
+   80,
+   60,
+   200,
+   1,
+   "fin"
+  ],
+  [
+   "Sid Curwen",
+   "ENG",
+   "AR",
+   72,
+   78,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Mohin Alibhai",
+   "ENG",
+   "AR",
+   72,
+   70,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Max Santana",
+   "NZ",
+   "AR",
+   62,
+   80,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Romeo Shepardson",
+   "WI",
+   "AR",
+   66,
+   70,
+   100,
+   1,
+   "fin"
+  ],
+  [
+   "Azizullah Omarkhel",
+   "AFG",
+   "AR",
+   68,
+   74,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Marno Janssens",
+   "SA",
+   "AR",
+   62,
+   80,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Wil Jackman",
+   "ENG",
+   "AR",
+   80,
+   55,
+   200,
+   1,
+   "op"
+  ],
+  [
+   "Darren Mitchum",
+   "NZ",
+   "AR",
+   76,
+   40,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Brett Stoker",
+   "ENG",
+   "AR",
+   80,
+   70,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Jayden Holden",
+   "WI",
+   "AR",
+   60,
+   74,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Mahmood Nabizada",
+   "AFG",
+   "AR",
+   62,
+   74,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Rachit Ravindran",
+   "NZ",
+   "AR",
+   80,
+   62,
+   150,
+   1,
+   "op"
+  ],
+  [
+   "Wanidu Hasarathna",
+   "SL",
+   "SPIN",
+   45,
+   87,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Murray Starkey",
+   "AUS",
+   "PACE",
+   25,
+   88,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Pete Cumberland",
+   "AUS",
+   "PACE",
+   45,
+   89,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Karabo Rabadu",
+   "SA",
+   "PACE",
+   20,
+   88,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Travis Bolton",
+   "NZ",
+   "PACE",
+   15,
+   89,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Joel Archbold",
+   "ENG",
+   "PACE",
+   25,
+   87,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Jack Hazelton",
+   "AUS",
+   "PACE",
+   10,
+   87,
+   200,
+   1,
+   "pp"
+  ],
+  [
+   "Andries Nortier",
+   "SA",
+   "PACE",
+   10,
+   82,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Lachie Fergus",
+   "NZ",
+   "PACE",
+   10,
+   83,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Matt Woodley",
+   "ENG",
+   "PACE",
+   10,
+   80,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Gerhard Coetser",
+   "SA",
+   "PACE",
+   15,
+   80,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Matheesh Pathirage",
+   "SL",
+   "PACE",
+   5,
+   85,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Moinul Rahmani",
+   "BAN",
+   "PACE",
+   5,
+   82,
+   200,
+   1,
+   "dth"
+  ],
+  [
+   "Alrick Josephs",
+   "WI",
+   "PACE",
+   15,
+   78,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Lungisa Ngidana",
+   "SA",
+   "PACE",
+   8,
+   80,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Sterling Johnston",
+   "AUS",
+   "PACE",
+   10,
+   76,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Nate Ellison",
+   "AUS",
+   "PACE",
+   10,
+   80,
+   100,
+   1,
+   "dth"
+  ],
+  [
+   "Rhys Toppings",
+   "ENG",
+   "PACE",
+   5,
+   76,
+   100,
+   1,
+   "pp"
+  ],
+  [
+   "Fazal Farooqzai",
+   "AFG",
+   "PACE",
+   5,
+   80,
+   150,
+   1,
+   "pp"
+  ],
+  [
+   "Naveed-ul-Hassan",
+   "AFG",
+   "PACE",
+   8,
+   79,
+   150,
+   1,
+   "dth"
+  ],
+  [
+   "Dushan Chamara",
+   "SL",
+   "PACE",
+   8,
+   75,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Nuwantha Thushan",
+   "SL",
+   "PACE",
+   5,
+   78,
+   100,
+   1,
+   "dth"
+  ],
+  [
+   "Aaron Milner",
+   "NZ",
+   "PACE",
+   10,
+   74,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Kurt Jameson",
+   "NZ",
+   "PACE",
+   35,
+   74,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Jarrod Behrend",
+   "AUS",
+   "PACE",
+   5,
+   76,
+   100,
+   1,
+   "pp"
+  ],
+  [
+   "Rahim Khanzada",
+   "AFG",
+   "SPIN",
+   55,
+   93,
+   200,
+   1,
+   ""
+  ],
+  [
+   "Nur Ahmadzai",
+   "AFG",
+   "SPIN",
+   8,
+   84,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Andy Zampieri",
+   "AUS",
+   "SPIN",
+   8,
+   82,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Maheen Theekshage",
+   "SL",
+   "SPIN",
+   10,
+   82,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Kesh Maharajan",
+   "SA",
+   "SPIN",
+   25,
+   78,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Adel Rasheedi",
+   "ENG",
+   "SPIN",
+   15,
+   82,
+   150,
+   1,
+   ""
+  ],
+  [
+   "Mujtaba Ur Rehmat",
+   "AFG",
+   "SPIN",
+   10,
+   78,
+   100,
+   1,
+   "pp"
+  ],
+  [
+   "Tabrez Shamsuddin",
+   "SA",
+   "SPIN",
+   5,
+   78,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Akil Hosang",
+   "WI",
+   "SPIN",
+   25,
+   78,
+   100,
+   1,
+   "pp"
+  ],
+  [
+   "Ahmad Ghazanfari",
+   "AFG",
+   "SPIN",
+   5,
+   76,
+   100,
+   1,
+   ""
+  ],
+  [
+   "Ashish Shrivas",
+   "IND",
+   "BAT",
+   74,
+   5,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Shashwat Singhvi",
+   "IND",
+   "BAT",
+   76,
+   10,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Ankit Raghuvir",
+   "IND",
+   "BAT",
+   70,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Ramanjit Sidhwani",
+   "IND",
+   "AR",
+   68,
+   50,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Abid Samadi",
+   "IND",
+   "BAT",
+   70,
+   20,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Nayan Dhiraj",
+   "IND",
+   "BAT",
+   70,
+   15,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Samarth Rizwani",
+   "IND",
+   "BAT",
+   66,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Priyam Aryan",
+   "IND",
+   "BAT",
+   74,
+   5,
+   30,
+   0,
+   "op"
+  ],
+  [
+   "Atharv Taidekar",
+   "IND",
+   "BAT",
+   64,
+   5,
+   30,
+   0,
+   "op"
+  ],
+  [
+   "Mahendra Lomrot",
+   "IND",
+   "BAT",
+   66,
+   30,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Swapnesh Prabhune",
+   "IND",
+   "BAT",
+   62,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Shahid Khanolkar",
+   "IND",
+   "BAT",
+   68,
+   5,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Nihal Wadhwani",
+   "IND",
+   "BAT",
+   70,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Ayan Badola",
+   "IND",
+   "BAT",
+   72,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Ronit Minjal",
+   "IND",
+   "WK",
+   64,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Kumar Kushal",
+   "IND",
+   "WK",
+   62,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Anurag Rawatkar",
+   "IND",
+   "WK",
+   64,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Abhijit Porwal",
+   "IND",
+   "WK",
+   70,
+   5,
+   30,
+   0,
+   "op"
+  ],
+  [
+   "Vishal Vinayak",
+   "IND",
+   "WK",
+   62,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Anupam Roychowdhury",
+   "IND",
+   "AR",
+   55,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Swaraj Singhdeo",
+   "IND",
+   "AR",
+   50,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Arif Khanwalkar",
+   "IND",
+   "AR",
+   58,
+   64,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Harjeet Brarwal",
+   "IND",
+   "SPIN",
+   40,
+   72,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Madhav Sutaria",
+   "IND",
+   "SPIN",
+   20,
+   68,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Kumar Kartikesh",
+   "IND",
+   "SPIN",
+   10,
+   68,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Prashanth Solankar",
+   "IND",
+   "SPIN",
+   10,
+   64,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Vaidik Arorkar",
+   "IND",
+   "PACE",
+   10,
+   72,
+   30,
+   0,
+   "pp"
+  ],
+  [
+   "Alok Madhwani",
+   "IND",
+   "PACE",
+   5,
+   72,
+   30,
+   0,
+   "dth"
+  ],
+  [
+   "Mukul Chowdappa",
+   "IND",
+   "PACE",
+   5,
+   68,
+   30,
+   0,
+   "pp"
+  ],
+  [
+   "Yatin Thakurdas",
+   "IND",
+   "PACE",
+   8,
+   70,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Kartikay Tyagaraj",
+   "IND",
+   "PACE",
+   5,
+   68,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Rafiq Salamat",
+   "IND",
+   "PACE",
+   10,
+   70,
+   30,
+   0,
+   "dth"
+  ],
+  [
+   "Vyshakh Vijayan",
+   "IND",
+   "PACE",
+   10,
+   70,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Kunwar Sengar",
+   "IND",
+   "PACE",
+   5,
+   68,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Darshit Nalawade",
+   "IND",
+   "PACE",
+   15,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Prerit Mankodi",
+   "IND",
+   "AR",
+   60,
+   55,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Akshit Singhraj",
+   "IND",
+   "PACE",
+   5,
+   66,
+   30,
+   0,
+   "pp"
+  ],
+  [
+   "Simranjit Sekhawat",
+   "IND",
+   "PACE",
+   5,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Arnav Tandon",
+   "IND",
+   "PACE",
+   25,
+   62,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Gurnam Bains",
+   "IND",
+   "PACE",
+   5,
+   64,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Muzammil Khattak",
+   "IND",
+   "AR",
+   62,
+   55,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Vansh Suryavardhan",
+   "IND",
+   "BAT",
+   72,
+   5,
+   30,
+   0,
+   "op"
+  ],
+  [
+   "Aayan Mhatrekar",
+   "IND",
+   "BAT",
+   68,
+   5,
+   30,
+   0,
+   "op"
+  ],
+  [
+   "Vigneshwar Puthran",
+   "IND",
+   "SPIN",
+   5,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Digvijay Rathod",
+   "IND",
+   "SPIN",
+   5,
+   70,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Zaid Ansarullah",
+   "IND",
+   "SPIN",
+   5,
+   64,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Ashwath Kumarswamy",
+   "IND",
+   "PACE",
+   5,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Pranay Yadunath",
+   "IND",
+   "PACE",
+   8,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Vipul Nigamkar",
+   "IND",
+   "AR",
+   58,
+   66,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Shaikh Rashidul",
+   "IND",
+   "BAT",
+   62,
+   5,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Aneesh Kambojia",
+   "IND",
+   "PACE",
+   20,
+   68,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Suryaveer Shendge",
+   "IND",
+   "AR",
+   62,
+   50,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Animesh Vermani",
+   "IND",
+   "BAT",
+   66,
+   5,
+   30,
+   0,
+   "fin"
+  ],
+  [
+   "Rajveer Bawaskar",
+   "IND",
+   "AR",
+   58,
+   58,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Kamal Nagarkar",
+   "IND",
+   "PACE",
+   15,
+   62,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Shivendra Mavlankar",
+   "IND",
+   "PACE",
+   15,
+   64,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Mangesh Bhandarkar",
+   "IND",
+   "AR",
+   58,
+   54,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Lokesh Yadavalli",
+   "IND",
+   "AR",
+   56,
+   62,
+   30,
+   0,
+   ""
+  ],
+  [
+   "Mohan Rathore",
+   "IND",
+   "PACE",
+   10,
+   62,
+   30,
+   0,
+   ""
+  ]
+ ],
+ "_names": "All player names are fictional. Any resemblance to real people is coincidental. Players can rename anyone in-game via the Roster Editor."
+}

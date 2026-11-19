@@ -1,0 +1,12 @@
+[
+  {"id": "MUM", "name": "Mumbai Monsoon",     "city": "Mumbai",    "primary": "#123a6b", "secondary": "#3fd0d4"},
+  {"id": "CHE", "name": "Chennai Surge",      "city": "Chennai",   "primary": "#0f7c80", "secondary": "#ff7f61"},
+  {"id": "BLR", "name": "Bengaluru Orbit",    "city": "Bengaluru", "primary": "#5b2bb5", "secondary": "#38d9f5"},
+  {"id": "KOL", "name": "Kolkata Monarchs",   "city": "Kolkata",   "primary": "#7a1730", "secondary": "#e8b84a"},
+  {"id": "HYD", "name": "Hyderabad Pearls",   "city": "Hyderabad", "primary": "#5aa9e6", "secondary": "#f4f7fb"},
+  {"id": "DEL", "name": "Delhi Comets",       "city": "Delhi",     "primary": "#2a2f7a", "secondary": "#c9d1de"},
+  {"id": "PUN", "name": "Punjab Stallions",   "city": "Mohali",    "primary": "#b3122e", "secondary": "#e0b04a"},
+  {"id": "JAI", "name": "Jaipur Mirage",      "city": "Jaipur",    "primary": "#e8891c", "secondary": "#e9d3a4"},
+  {"id": "LKO", "name": "Lucknow Lancers",    "city": "Lucknow",   "primary": "#0e7a4c", "secondary": "#d9b44a"},
+  {"id": "AHM", "name": "Ahmedabad Kites",    "city": "Ahmedabad", "primary": "#d42a2a", "secondary": "#1b2a52"}
+]

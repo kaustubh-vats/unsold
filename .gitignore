@@ -1,0 +1,37 @@
+# Godot
+.godot/
+/android/
+*.translation
+export/
+build/
+
+# Private Friends edition data (real names) — never commit or publish
+/private/
+
+# Build outputs
+*.apk
+*.aab
+*.idsig
+
+# Secrets / local config
+.env
+.env.*
+*.pem
+*.p12
+*.key
+google-services.json
+GoogleService-Info.plist
+config.local.gd
+*.keystore
+*.jks
+export_credentials.cfg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gradle build outputs of the Android plugin
+/android_plugin/.gradle/
+/android_plugin/build/
+/android_plugin/plugin/build/
+/android_plugin/local.properties
