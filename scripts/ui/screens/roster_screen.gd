@@ -171,7 +171,7 @@ func _build_import_panel() -> void:
 	import_text.custom_minimum_size.y = 120
 	import_text.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
 	import_text.placeholder_text = "{ \"format\": \"unsold-roster-1\", ... }"
-	import_text.add_theme_stylebox_override("normal", UI.box(Color(0.04, 0.05, 0.1, 0.9), 10, 10, UI.LINE))
+	import_text.add_theme_stylebox_override("normal", UI.box(UI.FIELD, 10, 10, UI.LINE))
 	import_text.add_theme_font_size_override("font_size", 13)
 	v.add_child(import_text)
 	var r := UI.hbox(8)

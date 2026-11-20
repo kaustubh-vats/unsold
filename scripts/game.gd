@@ -2,6 +2,7 @@ extends Node
 ## Global game state (autoload "Game"): player profile, current room, navigation.
 
 signal screen_requested(screen: String)
+signal theme_changed
 
 const PROFILE := "user://profile.cfg"
 
@@ -11,6 +12,7 @@ var results_cache := {}   # memoized season/score results by key
 
 
 func _ready() -> void:
+	UI.load_theme_choice()
 	DB.ensure_loaded()
 	randomize()
 	var cfg := ConfigFile.new()
@@ -33,6 +35,11 @@ func save_name(n: String) -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("profile", "name", player_name)
 	cfg.save(PROFILE)
+
+
+func toggle_theme() -> void:
+	UI.set_light(not UI.light)
+	theme_changed.emit()
 
 
 func goto(screen: String) -> void:

@@ -76,6 +76,16 @@ func _tick() -> void:
 		var pace: float = AI.level(state)["pace"]
 		var think := int((rng.randi_range(500, 1000) if human_led else rng.randi_range(200, 500)) * pace)
 		_next_ai_at = now + Sfx.line_ms("bid_%d" % int(a.get("bid", 0))) + think
+	if store.fast_forwarding():
+		# Fast-forward: AI wars resolve in one jump, then the hammer falls at once.
+		var f := AI.choose_bidder(state, rng, true)
+		if f.is_empty():
+			await _run(Auction.settle_updates(state, now))
+		else:
+			_busy = true
+			await store.place_bid(f["team"], f["amount"])
+			_busy = false
+		return
 	var ends := int(a.get("ends", 0))
 	# Never close a lot before the AI teams have had their chance to answer the last bid.
 	if now >= ends and now >= _next_ai_at and _ai_answered:

@@ -96,7 +96,7 @@ func _google_button() -> Button:
 	b.add_theme_stylebox_override("normal", UI.box(Color("f8f9fb"), 14, 14))
 	b.add_theme_stylebox_override("hover", UI.box(Color.WHITE, 14, 14, UI.GOLD))
 	b.add_theme_stylebox_override("pressed", UI.box(Color("e4e7ee"), 14, 14))
-	b.add_theme_stylebox_override("disabled", UI.box(Color(1, 1, 1, 0.25), 14, 14))
+	b.add_theme_stylebox_override("disabled", UI.box(UI.ink(0.25), 14, 14))
 	var h := UI.hbox(10)
 	h.alignment = BoxContainer.ALIGNMENT_CENTER
 	h.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

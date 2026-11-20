@@ -14,6 +14,7 @@ func _ready() -> void:
 	var top := UI.hbox()
 	top.add_child(UI.spacer(0, 1))
 	top.get_child(0).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(UI.theme_button())
 	top.add_child(UI.sound_button())
 	add_child(top)
 

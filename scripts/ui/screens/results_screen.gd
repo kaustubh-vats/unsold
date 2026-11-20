@@ -28,7 +28,7 @@ func _ready() -> void:
 	var col := UI.team_color(winner)
 	var banner := PanelContainer.new()
 	banner.add_theme_stylebox_override("panel",
-		UI.glow(UI.box(Color(col.darkened(0.5), 0.9), 24, 18, UI.GOLD, 2), Color(UI.GOLD, 0.3), 18))
+		UI.glow(UI.box(UI.shade(col, 0.5, 0.9), 24, 18, UI.GOLD, 2), Color(UI.GOLD, 0.3), 18))
 	var bh := UI.hbox(14)
 	banner.add_child(bh)
 	var cr := UI.crest(winner, 104)
@@ -131,7 +131,7 @@ func _cell(text: String, w: int, color := UI.TEXT, display := false, align := HO
 
 func _row_panel(highlight: bool) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UI.box(Color(UI.GOLD, 0.1) if highlight else Color(1, 1, 1, 0.03), 12, 8,
+	p.add_theme_stylebox_override("panel", UI.box(Color(UI.GOLD, 0.1) if highlight else UI.ink(0.03), 12, 8,
 		Color(UI.GOLD, 0.5) if highlight else Color(0, 0, 0, 0)))
 	return p
 
@@ -255,7 +255,7 @@ func _ratings() -> Control:
 		pv.add_child(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f  •  Value %.1f" % [
 			r["batting"], r["bowling"], r["balance"], r["depth"], r["value"]], UI.MUTED, 10))
 		if not r["notes"].is_empty():
-			pv.add_child(UI.wrap(UI.label("⚠ " + ", ".join(r["notes"]), 12, UI.RED.lightened(0.25))))
+			pv.add_child(UI.wrap(UI.label("⚠ " + ", ".join(r["notes"]), 12, UI.soft(UI.RED, 0.25))))
 		v.add_child(p)
 	return v
 

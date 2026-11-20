@@ -113,6 +113,22 @@ func talking() -> bool:
 	return voice.playing or _voice_next != ""
 
 
+## "Sold! To the <team>!" — per-team lines; the Friends edition has its own
+## clips with real team names in private/vo. Renamed teams get the generic call.
+func say_sold(tid: String) -> void:
+	var priv := "res://private/vo/sold_%s.mp3" % tid.to_lower()
+	if DB.is_friends_edition() and not DB.is_renamed(tid) and ResourceLoader.exists(priv):
+		hush()
+		if sfx_on:
+			voice.stream = load(priv)
+			voice.play()
+		return
+	if not DB.is_friends_edition() and not DB.is_renamed(tid) and ResourceLoader.exists(DIR + "vo/sold_%s.mp3" % tid.to_lower()):
+		say("sold_%s" % tid.to_lower(), true)
+	else:
+		say("vo_sold", true)
+
+
 func hush() -> void:
 	_voice_next = ""
 	voice.stop()

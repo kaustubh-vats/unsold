@@ -13,6 +13,10 @@ A realistic franchise-cricket auction game built in **Godot 4.7**. It runs on th
   - you can't bid money you need to keep for filling the rest of your squad
 - **Live, turn-by-turn bidding**: while you're still in, AI franchises raise one increment at a time and every raise resets the clock, so the lot keeps coming back to you ("MUM BID — YOUR CALL: ₹4.5 Cr?"). A lot only goes "going once, going twice…" when nobody else wants the player. You can pass and bid again to re-enter.
 - **Auctioneer voice**: an ElevenLabs auctioneer calls every lot and bid ("Two crore fifty! Anyone at two crore seventy-five?"), with on-screen subtitles. In a fast bidding war he skips to the current price instead of falling behind.
+- **Fast-forward** (single player): the ▶▶ button skips to the final bid of the current lot.
+- **Squad views**: the "my team" panel at the top of the auction shows your purse, squad, overseas count, max bid and role balance; tap it (or any franchise tile, or *All teams*) for a full sheet with every player bought, money spent and XI strength.
+- **Light and dark themes**: the sun/moon button in each header switches theme; the choice is remembered.
+- **Online opponents**: the host picks *Players + bots* (AI runs unpicked franchises) or *Real players only*. Rooms take 2–10 players.
 - **AI difficulty** (lobby setting): *Easy* AI bids cautiously and misjudges players, *Medium* behaves like a typical auction room, *Hard* chases stars, rarely skips a good player and answers your bids quickly.
 - **Choosing the winner**: the host picks one of two modes.
   - **Simulated season**: a ball-by-ball T20 match engine runs a round-robin league, then Qualifier 1, the Eliminator, Qualifier 2 and the Final, with a points table, NRR and scorecards.
@@ -187,7 +191,7 @@ Audio was generated with the ElevenLabs CLI and lives in `assets/audio/`:
 
 - **Music**: `music_loop.mp3`, a 20-second seamless loop.
 - **Sound effects**: `bid`, `outbid`, `tick`, `sold` (gavel and applause), `unsold`, `click` and `win` (crowd and fanfare).
-- **Auctioneer voice**: `vo_sold`, `vo_unsold` and `vo_going` ("Going once… going twice…"), plus `vo/bid_<lakh>.mp3` for every value on the bid ladder and `vo/open_<base>.mp3` for each base price. The spoken text (also shown as subtitles) is in `data/auctioneer.json`.
+- **Auctioneer voice**: `vo_sold`, `vo_unsold` and `vo_going` ("Going once… going twice…"), plus `vo/bid_<lakh>.mp3` for every value on the bid ladder, `vo/open_<base>.mp3` for each base price and `vo/sold_<team>.mp3` ("Sold! To the Mumbai Monsoon!"). The Friends edition keeps its real-name "sold to" clips in the git-ignored `private/vo/`. The spoken text (also shown as subtitles) is in `data/auctioneer.json`.
 
 The `Sfx` autoload (`scripts/sfx.gd`) plays these. The speaker button in each screen header toggles the music, and the setting is remembered between sessions.
 

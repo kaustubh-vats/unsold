@@ -10,6 +10,7 @@ var out_dir := ""
 func _initialize() -> void:
 	out_dir = OS.get_user_data_dir() + "/smoke"
 	DirAccess.make_dir_recursive_absolute(out_dir)
+	UI.set_light(false, false)
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	_run()
@@ -84,6 +85,24 @@ func _run() -> void:
 			s.changed.emit()
 			await _wait(0.5)
 			await _shot("5_auction_mid")
+			var scr = main.screen
+			scr._open_sheet("team:CHE")
+			await _wait(0.6)
+			await _shot("5b_sheet_my_squad")
+			scr._open_sheet("teams")
+			await _wait(0.4)
+			await _shot("5c_sheet_teams")
+			scr.sheet_back = ""
+			scr._close_sheet()
+			UI.set_light(true, false)
+			game.theme_changed.emit()
+			await _wait(0.6)
+			await _shot("5d_auction_light")
+			main.screen._open_sheet("team:CHE")
+			await _wait(0.6)
+			await _shot("5e_sheet_light")
+			main.screen.sheet_back = ""
+			main.screen._close_sheet()
 	# Finish whatever is left.
 	while s.state["meta"]["status"] == "auction":
 		var a2: Dictionary = s.state["auction"]
@@ -98,10 +117,14 @@ func _run() -> void:
 	s.changed.emit()
 	s.auctioneer.set_process(true)
 	await _wait(0.8)
-	await _shot("6_review")
+	await _shot("6_review_light")
 	await s.set_xi("CHE", XI.best_xi(s.team("CHE")["squad"].keys()))
 	await s.set_ready(true)
 	await _wait(1.5)
-	await _shot("7_results")
+	await _shot("7_results_light")
+	UI.set_light(false, false)
+	game.theme_changed.emit()
+	await _wait(0.3)
+	await _shot("8_results_dark")
 	print("SMOKE DONE")
 	quit(0)

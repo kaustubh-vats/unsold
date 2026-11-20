@@ -13,7 +13,7 @@ func _draw() -> void:
 	var c := size / 2.0
 	var r := minf(size.x, size.y) / 2.0 - 7.0
 	draw_circle(c, r + 4.0, Color(0, 0, 0, 0.35))
-	draw_arc(c, r, 0, TAU, 72, Color(1, 1, 1, 0.08), 9.0, true)
+	draw_arc(c, r, 0, TAU, 72, UI.ink(0.08), 9.0, true)
 	var col := UI.GREEN
 	if fraction < 0.5:
 		col = UI.GOLD

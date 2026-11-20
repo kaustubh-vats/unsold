@@ -17,15 +17,46 @@ var current := ""
 var holder: MarginContainer
 var screen: Control
 var bg_tex: TextureRect
+var backdrop: Control
 
 
 func _ready() -> void:
+	_build_backdrop()
+	holder = MarginContainer.new()
+	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
+	holder.add_theme_constant_override("margin_left", 16)
+	holder.add_theme_constant_override("margin_right", 16)
+	holder.add_theme_constant_override("margin_top", 18)
+	holder.add_theme_constant_override("margin_bottom", 14)
+	add_child(holder)
+	Game.screen_requested.connect(show_screen)
+	Game.theme_changed.connect(_on_theme_changed)
+	show_screen("home")
+
+
+## Swap palettes: rebuild the theme, the backdrop and the current screen.
+func _on_theme_changed() -> void:
+	_build_backdrop()
+	var name := current
+	current = ""
+	show_screen(name)
+
+
+func _build_backdrop() -> void:
 	theme = UI.make_theme()
+	RenderingServer.set_default_clear_color(UI.BG)
+	if backdrop != null:
+		backdrop.queue_free()
+	backdrop = Control.new()
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
+	move_child(backdrop, 0)
 	var base := ColorRect.new()
 	base.color = UI.BG
 	base.set_anchors_preset(Control.PRESET_FULL_RECT)
 	base.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(base)
+	backdrop.add_child(base)
 	if ResourceLoader.exists("res://assets/bg.jpg"):
 		bg_tex = TextureRect.new()
 		bg_tex.texture = load("res://assets/bg.jpg")
@@ -33,13 +64,15 @@ func _ready() -> void:
 		bg_tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		bg_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		bg_tex.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(bg_tex)
-	# Darkening gradient so text stays readable over the floodlights.
+		backdrop.add_child(bg_tex)
+	# Gradient wash so text stays readable over the floodlights: dark in the
+	# dark theme, a bright daylight wash in the light theme.
 	var shade := TextureRect.new()
 	var g := Gradient.new()
-	g.set_color(0, Color(0.027, 0.04, 0.08, 0.35))
-	g.set_color(1, Color(0.027, 0.04, 0.08, 0.92))
-	g.add_point(0.45, Color(0.027, 0.04, 0.08, 0.7))
+	var w := Color(UI.BG, 1.0)
+	g.set_color(0, Color(w, 0.62 if UI.light else 0.35))
+	g.set_color(1, Color(w, 0.97 if UI.light else 0.92))
+	g.add_point(0.45, Color(w, 0.88 if UI.light else 0.7))
 	var gt := GradientTexture2D.new()
 	gt.gradient = g
 	gt.fill_from = Vector2(0.5, 0.0)
@@ -49,17 +82,8 @@ func _ready() -> void:
 	shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	shade.stretch_mode = TextureRect.STRETCH_SCALE
 	shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(shade)
+	backdrop.add_child(shade)
 	_add_dust()
-	holder = MarginContainer.new()
-	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
-	holder.add_theme_constant_override("margin_left", 16)
-	holder.add_theme_constant_override("margin_right", 16)
-	holder.add_theme_constant_override("margin_top", 18)
-	holder.add_theme_constant_override("margin_bottom", 14)
-	add_child(holder)
-	Game.screen_requested.connect(show_screen)
-	show_screen("home")
 
 
 ## Slow drifting specks of floodlight dust for atmosphere.
@@ -77,9 +101,9 @@ func _add_dust() -> void:
 	p.initial_velocity_max = 18
 	p.scale_amount_min = 1.0
 	p.scale_amount_max = 2.5
-	p.color = Color(1.0, 0.85, 0.45, 0.22)
+	p.color = Color(0.85, 0.6, 0.1, 0.18) if UI.light else Color(1.0, 0.85, 0.45, 0.22)
 	p.position = Vector2(270, 480)
-	add_child(p)
+	backdrop.add_child(p)
 
 
 func show_screen(name: String) -> void:

@@ -105,6 +105,14 @@ func start_auction() -> void:
 	if my_team() == "":
 		error.emit("Pick your franchise first")
 		return
+	if is_online():
+		var humans := 0
+		for uid in state.get("players", {}):
+			if state["players"][uid].get("team", "") != "":
+				humans += 1
+		if humans < 2:
+			error.emit("Online rooms need at least 2 players with a franchise")
+			return
 	await write(Auction.start_updates(state, now_ms()))
 
 
@@ -127,6 +135,25 @@ func place_bid(tid: String, amount: int) -> String:
 	var ok := await _transact_auction(func(cur):
 		return Auction.apply_bid(cur, tid, amount, t, now, timer))
 	return "" if ok else "Outbid — try again"
+
+
+## Single player: skip to the end of the current lot. The AI settles its bidding
+## war in one jump and the hammer falls straight away.
+var ff_lot := ""
+
+
+func lot_key() -> String:
+	var a := auction()
+	return "%s|%s|%s" % [a.get("pid", ""), str(a.get("round", 1)), str(a.get("idx", 0))]
+
+
+func fast_forward() -> void:
+	if not is_online():
+		ff_lot = lot_key()
+
+
+func fast_forwarding() -> bool:
+	return ff_lot != "" and ff_lot == lot_key()
 
 
 func pass_lot(tid: String) -> void:

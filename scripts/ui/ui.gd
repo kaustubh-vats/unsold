@@ -4,26 +4,86 @@ extends RefCounted
 ## stadium, condensed display type for names and money, gold for value, team
 ## colours for identity. Screens are built in code from these helpers.
 
-const BG := Color("070a14")
-const GLASS := Color(0.075, 0.09, 0.16, 0.84)
-const GLASS_HI := Color(0.12, 0.145, 0.25, 0.92)
-const LINE := Color(1, 1, 1, 0.09)
-const TEXT := Color("f2f4fa")
-const MUTED := Color("97a0bd")
-const DIM := Color("5d6684")
-const GOLD := Color("ffc53d")
-const GOLD_DEEP := Color("f59e0b")
-const RED := Color("ff4d6d")
-const GREEN := Color("22d38a")
-const BLUE := Color("4f8cff")
+# Palette. Two themes share the same token names; `set_light()` swaps them and
+# the app rebuilds the current screen. Colours are static vars (not consts) so
+# they can change at runtime.
+static var DARK := {
+	"BG": Color("070a14"), "GLASS": Color(0.075, 0.09, 0.16, 0.84), "GLASS_HI": Color(0.12, 0.145, 0.25, 0.92),
+	"LINE": Color(1, 1, 1, 0.09), "TEXT": Color("f2f4fa"), "MUTED": Color("97a0bd"), "DIM": Color("5d6684"),
+	"GOLD": Color("ffc53d"), "GOLD_DEEP": Color("f59e0b"), "RED": Color("ff4d6d"), "GREEN": Color("22d38a"),
+	"BLUE": Color("4f8cff"), "FIELD": Color(0.04, 0.05, 0.1, 0.85), "INK": Color(1, 1, 1),
+}
+static var LIGHT := {
+	"BG": Color("eef0f5"), "GLASS": Color(1, 1, 1, 0.9), "GLASS_HI": Color(1, 1, 1, 0.97),
+	"LINE": Color(0.08, 0.1, 0.2, 0.12), "TEXT": Color("141a2b"), "MUTED": Color("586078"), "DIM": Color("8a92a8"),
+	"GOLD": Color("c98a00"), "GOLD_DEEP": Color("a86f00"), "RED": Color("d6284b"), "GREEN": Color("0e9a62"),
+	"BLUE": Color("2563eb"), "FIELD": Color(1, 1, 1, 0.95), "INK": Color(0.05, 0.07, 0.15),
+}
+const SETTINGS := "user://ui.cfg"
+
+static var light := false
+static var BG: Color = DARK["BG"]
+static var GLASS: Color = DARK["GLASS"]
+static var GLASS_HI: Color = DARK["GLASS_HI"]
+static var LINE: Color = DARK["LINE"]
+static var TEXT: Color = DARK["TEXT"]
+static var MUTED: Color = DARK["MUTED"]
+static var DIM: Color = DARK["DIM"]
+static var GOLD: Color = DARK["GOLD"]
+static var GOLD_DEEP: Color = DARK["GOLD_DEEP"]
+static var RED: Color = DARK["RED"]
+static var GREEN: Color = DARK["GREEN"]
+static var BLUE: Color = DARK["BLUE"]
+static var FIELD: Color = DARK["FIELD"]
+static var INK: Color = DARK["INK"]
 # Kept for compatibility with older code paths.
-const PANEL := GLASS
-const PANEL2 := GLASS_HI
+static var PANEL: Color = DARK["GLASS"]
+static var PANEL2: Color = DARK["GLASS_HI"]
 
 static var _regular: Font
 static var _bold: Font
 static var _display: Font
 static var _caps: Font
+
+
+# ------------------------------------------------------------------ theme
+
+## Loads the saved theme choice (call once at startup).
+static func load_theme_choice() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(SETTINGS) == OK:
+		set_light(bool(cfg.get_value("ui", "light", false)), false)
+
+
+static func set_light(on: bool, save := true) -> void:
+	light = on
+	var p: Dictionary = LIGHT if on else DARK
+	BG = p["BG"]; GLASS = p["GLASS"]; GLASS_HI = p["GLASS_HI"]; LINE = p["LINE"]
+	TEXT = p["TEXT"]; MUTED = p["MUTED"]; DIM = p["DIM"]; GOLD = p["GOLD"]
+	GOLD_DEEP = p["GOLD_DEEP"]; RED = p["RED"]; GREEN = p["GREEN"]; BLUE = p["BLUE"]
+	FIELD = p["FIELD"]; INK = p["INK"]; PANEL = GLASS; PANEL2 = GLASS_HI
+	if save:
+		var cfg := ConfigFile.new()
+		cfg.set_value("ui", "light", on)
+		cfg.save(SETTINGS)
+
+
+## Foreground "ink" at a given opacity: white on dark, near-black on light.
+## Used for hairlines, hover washes and subtle row backgrounds.
+static func ink(a: float) -> Color:
+	return Color(INK, a)
+
+
+## A panel tint of a team colour: deep on dark, pale on light.
+static func shade(col: Color, amount := 0.45, alpha := 0.9) -> Color:
+	if light:
+		return Color(col.lightened(clampf(0.95 - amount * 0.5, 0.6, 0.85)), alpha)
+	return Color(col.darkened(amount), alpha)
+
+
+## A status colour softened for text: lighter on dark, a touch deeper on light.
+static func soft(col: Color, amount := 0.3) -> Color:
+	return col.darkened(0.1) if light else col.lightened(amount)
 
 
 # ------------------------------------------------------------------ fonts
@@ -101,25 +161,25 @@ static func make_theme() -> Theme:
 	t.set_stylebox("normal", "Button", box(GLASS_HI, 14, 14, LINE))
 	t.set_stylebox("hover", "Button", box(GLASS_HI.lightened(0.06), 14, 14, GOLD.darkened(0.35)))
 	t.set_stylebox("pressed", "Button", box(GLASS_HI.darkened(0.15), 14, 14, GOLD))
-	t.set_stylebox("disabled", "Button", box(Color(0.1, 0.11, 0.17, 0.6), 14, 14))
+	t.set_stylebox("disabled", "Button", box(ink(0.04), 14, 14))
 	t.set_stylebox("focus", "Button", StyleBoxEmpty.new())
 	t.set_color("font_color", "Button", TEXT)
-	t.set_color("font_hover_color", "Button", Color.WHITE)
-	t.set_color("font_pressed_color", "Button", Color.WHITE)
+	t.set_color("font_hover_color", "Button", TEXT)
+	t.set_color("font_pressed_color", "Button", TEXT)
 	t.set_color("font_disabled_color", "Button", DIM)
 	t.set_font("font", "Button", bold_font())
-	t.set_stylebox("normal", "LineEdit", box(Color(0.04, 0.05, 0.1, 0.85), 12, 14, LINE))
-	t.set_stylebox("focus", "LineEdit", box(Color(0.04, 0.05, 0.1, 0.95), 12, 14, GOLD, 2))
+	t.set_stylebox("normal", "LineEdit", box(FIELD, 12, 14, LINE))
+	t.set_stylebox("focus", "LineEdit", box(FIELD, 12, 14, GOLD, 2))
 	t.set_color("font_color", "LineEdit", TEXT)
 	t.set_color("font_placeholder_color", "LineEdit", DIM)
 	t.set_color("caret_color", "LineEdit", GOLD)
 	t.set_stylebox("panel", "PanelContainer", box(GLASS, 18, 14, LINE))
-	t.set_stylebox("background", "ProgressBar", box(Color(1, 1, 1, 0.07), 6, 0))
+	t.set_stylebox("background", "ProgressBar", box(ink(0.07), 6, 0))
 	t.set_stylebox("fill", "ProgressBar", box(GOLD, 6, 0))
 	t.set_stylebox("panel", "TabContainer", box(GLASS, 16, 10, LINE))
 	t.set_stylebox("tab_selected", "TabContainer", box(GLASS, 12, 14))
 	t.set_stylebox("tab_unselected", "TabContainer", box(Color(0, 0, 0, 0), 12, 14))
-	t.set_stylebox("tab_hovered", "TabContainer", box(Color(1, 1, 1, 0.04), 12, 14))
+	t.set_stylebox("tab_hovered", "TabContainer", box(ink(0.04), 12, 14))
 	t.set_stylebox("tabbar_background", "TabContainer", StyleBoxEmpty.new())
 	t.set_color("font_selected_color", "TabContainer", GOLD)
 	t.set_color("font_unselected_color", "TabContainer", MUTED)
@@ -130,8 +190,8 @@ static func make_theme() -> Theme:
 	t.set_constant("separation", "HBoxContainer", 10)
 	for sb in ["VScrollBar", "HScrollBar"]:
 		t.set_stylebox("scroll", sb, box(Color(0, 0, 0, 0), 4, 0))
-		t.set_stylebox("grabber", sb, box(Color(1, 1, 1, 0.12), 4, 0))
-		t.set_stylebox("grabber_highlight", sb, box(Color(1, 1, 1, 0.25), 4, 0))
+		t.set_stylebox("grabber", sb, box(ink(0.12), 4, 0))
+		t.set_stylebox("grabber_highlight", sb, box(ink(0.25), 4, 0))
 		t.set_stylebox("grabber_pressed", sb, box(GOLD, 4, 0))
 	return t
 
@@ -193,10 +253,10 @@ static func button(text: String, cb: Callable, kind := "normal", size := 17) -> 
 			b.add_theme_stylebox_override("normal", glow(box(GOLD, 14, 16), Color(GOLD, 0.28), 12))
 			b.add_theme_stylebox_override("hover", glow(box(GOLD.lightened(0.12), 14, 16), Color(GOLD, 0.45), 16))
 			b.add_theme_stylebox_override("pressed", glow(box(GOLD_DEEP, 14, 16), Color(GOLD, 0.2), 6))
-			b.add_theme_stylebox_override("disabled", box(Color(0.25, 0.22, 0.12, 0.6), 14, 16))
+			b.add_theme_stylebox_override("disabled", box(ink(0.08), 14, 16))
 			for c in ["font_color", "font_hover_color", "font_pressed_color"]:
 				b.add_theme_color_override(c, Color("1a1405"))
-			b.add_theme_color_override("font_disabled_color", Color(1, 1, 1, 0.3))
+			b.add_theme_color_override("font_disabled_color", ink(0.3))
 			b.add_theme_font_override("font", display_font())
 			b.add_theme_font_size_override("font_size", size + 8)
 		"danger":
@@ -205,14 +265,14 @@ static func button(text: String, cb: Callable, kind := "normal", size := 17) -> 
 			b.add_theme_color_override("font_color", RED.lightened(0.3))
 		"ghost":
 			b.add_theme_stylebox_override("normal", box(Color(0, 0, 0, 0), 12, 12, LINE))
-			b.add_theme_stylebox_override("hover", box(Color(1, 1, 1, 0.05), 12, 12, Color(1, 1, 1, 0.2)))
+			b.add_theme_stylebox_override("hover", box(ink(0.05), 12, 12, ink(0.2)))
 			b.add_theme_color_override("font_color", MUTED)
 		"icon":
 			b.custom_minimum_size = Vector2(46, 46)
 			b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-			b.add_theme_stylebox_override("normal", box(Color(1, 1, 1, 0.05), 23, 8, LINE))
-			b.add_theme_stylebox_override("hover", box(Color(1, 1, 1, 0.1), 23, 8, Color(1, 1, 1, 0.2)))
-			b.add_theme_stylebox_override("pressed", box(Color(1, 1, 1, 0.15), 23, 8, GOLD))
+			b.add_theme_stylebox_override("normal", box(ink(0.05), 23, 8, LINE))
+			b.add_theme_stylebox_override("hover", box(ink(0.1), 23, 8, ink(0.2)))
+			b.add_theme_stylebox_override("pressed", box(ink(0.15), 23, 8, GOLD))
 	b.pressed.connect(func(): _click())
 	if cb.is_valid():
 		b.pressed.connect(cb)
@@ -247,11 +307,11 @@ static func segmented(labels: Array, values: Array, current, cb: Callable, enabl
 		b.custom_minimum_size.y = 42
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		b.add_theme_font_size_override("font_size", 14)
-		b.add_theme_stylebox_override("normal", box(Color(1, 1, 1, 0.04), 11, 10, LINE))
-		b.add_theme_stylebox_override("hover", box(Color(1, 1, 1, 0.08), 11, 10, Color(1, 1, 1, 0.2)))
+		b.add_theme_stylebox_override("normal", box(ink(0.04), 11, 10, LINE))
+		b.add_theme_stylebox_override("hover", box(ink(0.08), 11, 10, ink(0.2)))
 		b.add_theme_stylebox_override("pressed", box(Color(GOLD, 0.16), 11, 10, GOLD))
 		b.add_theme_stylebox_override("hover_pressed", box(Color(GOLD, 0.22), 11, 10, GOLD))
-		b.add_theme_stylebox_override("disabled", box(Color(1, 1, 1, 0.02), 11, 10))
+		b.add_theme_stylebox_override("disabled", box(ink(0.02), 11, 10))
 		b.add_theme_color_override("font_pressed_color", GOLD)
 		b.add_theme_color_override("font_hover_pressed_color", GOLD)
 		b.add_theme_color_override("font_color", MUTED)
@@ -351,6 +411,12 @@ static func team_color2(tid: String) -> Color:
 ## Brighter version of a team colour that stays readable on dark glass.
 static func team_accent(tid: String) -> Color:
 	var c := team_color(tid)
+	if light:
+		# On light panels pick the deeper of the two team colours.
+		var c2 := team_color2(tid)
+		if c2.get_luminance() < c.get_luminance():
+			c = c2
+		return c.darkened(0.25) if c.get_luminance() > 0.5 else c
 	if c.get_luminance() < 0.25:
 		c = team_color2(tid)
 	if c.get_luminance() < 0.3:
@@ -413,7 +479,7 @@ static func rating_bar(name: String, value: int, color: Color) -> Control:
 	pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pb.add_theme_stylebox_override("fill", glow(box(color, 4, 0), Color(color, 0.35), 4))
-	pb.add_theme_stylebox_override("background", box(Color(1, 1, 1, 0.07), 4, 0))
+	pb.add_theme_stylebox_override("background", box(ink(0.07), 4, 0))
 	h.add_child(pb)
 	var v := display(str(value), 22, TEXT)
 	v.custom_minimum_size.x = 30
@@ -424,8 +490,8 @@ static func rating_bar(name: String, value: int, color: Color) -> Control:
 
 static func toast(parent: Node, text: String, color := RED) -> void:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", glow(box(Color(0.06, 0.07, 0.13, 0.96), 14, 16, color, 2), Color(color, 0.3), 10))
-	var l := label(text, 15, Color.WHITE, true)
+	p.add_theme_stylebox_override("panel", glow(box(Color(GLASS_HI, 0.98), 14, 16, color, 2), Color(color, 0.3), 10))
+	var l := label(text, 15, TEXT, true)
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	p.add_child(l)
 	p.z_index = 100
@@ -451,6 +517,20 @@ static func pop(c: Control, scale_to := 1.08) -> void:
 	var tw := c.create_tween()
 	tw.tween_property(c, "scale", Vector2(scale_to, scale_to), 0.08)
 	tw.tween_property(c, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Light/dark theme toggle for headers.
+static func theme_button() -> Button:
+	var b := button("", Callable(), "icon", 18)
+	b.tooltip_text = "Light / dark theme"
+	var icon := preload("res://scripts/ui/theme_icon.gd").new()
+	icon.set_anchors_preset(Control.PRESET_FULL_RECT)
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(icon)
+	b.pressed.connect(func():
+		var tree := Engine.get_main_loop() as SceneTree
+		tree.root.get_node("Game").toggle_theme())
+	return b
 
 
 ## Audio/music toggle for headers.

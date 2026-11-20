@@ -20,6 +20,7 @@ func _ready() -> void:
 	hv.add_child(UI.caption("Auction complete  •  " + DB.team(tid).get("name", ""), UI.GOLD))
 	hv.add_child(UI.display("Pick your playing XI", 36))
 	head.add_child(hv)
+	head.add_child(UI.theme_button())
 	head.add_child(UI.sound_button())
 	add_child(head)
 	counters = UI.hbox(6)
@@ -66,7 +67,7 @@ func _squad() -> Dictionary:
 
 
 func _counter(text: String, ok: bool) -> Control:
-	return UI.chip(text, Color(UI.GREEN, 0.16) if ok else Color(UI.RED, 0.16), UI.GREEN if ok else UI.RED.lightened(0.3), 12)
+	return UI.chip(text, Color(UI.GREEN, 0.16) if ok else Color(UI.RED, 0.16), UI.GREEN if ok else UI.soft(UI.RED), 12)
 
 
 func _render() -> void:
@@ -106,9 +107,9 @@ func _row(pid: String, price: int) -> Control:
 	b.button_pressed = on
 	b.custom_minimum_size.y = 58
 	b.add_theme_stylebox_override("normal", UI.box(UI.GLASS, 14, 10, UI.LINE))
-	b.add_theme_stylebox_override("hover", UI.box(UI.GLASS_HI, 14, 10, Color(1, 1, 1, 0.2)))
-	b.add_theme_stylebox_override("pressed", UI.box(Color(0.07, 0.25, 0.18, 0.9), 14, 10, UI.GREEN))
-	b.add_theme_stylebox_override("hover_pressed", UI.box(Color(0.08, 0.3, 0.2, 0.95), 14, 10, UI.GREEN))
+	b.add_theme_stylebox_override("hover", UI.box(UI.GLASS_HI, 14, 10, UI.ink(0.2)))
+	b.add_theme_stylebox_override("pressed", UI.box(Color(UI.GREEN, 0.2), 14, 10, UI.GREEN))
+	b.add_theme_stylebox_override("hover_pressed", UI.box(Color(UI.GREEN, 0.28), 14, 10, UI.GREEN))
 	b.toggled.connect(func(v):
 		UI._click()
 		_toggle(pid, v))

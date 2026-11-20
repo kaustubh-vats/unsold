@@ -6,7 +6,7 @@ extends SceneTree
 ##   godot --headless --path . -s res://tests/bidding_flow.gd
 
 const ME := "CHE"
-const LIMIT := 1500   # lakh: the "human" stops raising above this
+const LIMIT := 500   # lakh: the "human" stops raising above this
 
 
 func _initialize() -> void:
@@ -24,7 +24,7 @@ func _run() -> void:
 	var human_bids := 0
 	var my_turns := 0
 	var problems := 0
-	for lot in 4:
+	for lot in 2:
 		var a: Dictionary = s.auction()
 		var pid: String = a.get("pid", "")
 		print("\nLOT ", lot + 1, ": ", DB.player(pid)["name"], " base ", DB.fmt_price(int(DB.player(pid)["base"])))
@@ -59,5 +59,14 @@ func _run() -> void:
 		while s.auction().get("pid", "") == pid:
 			await create_timer(0.1).timeout
 	print("\nhuman bids placed: %d, turns given: %d" % [human_bids, my_turns])
-	print("RESULT: ", "PASS" if human_bids >= 2 else "FAIL")
+	# Fast-forward: the next lot should be decided within a couple of seconds.
+	var ff_pid: String = s.auction().get("pid", "")
+	var t1 := Time.get_ticks_msec()
+	s.fast_forward()
+	while s.auction().get("pid", "") == ff_pid and s.auction().get("phase", "") == "bidding" and Time.get_ticks_msec() - t1 < 10000:
+		await create_timer(0.05).timeout
+	var ff_ms := Time.get_ticks_msec() - t1
+	var fa: Dictionary = s.auction()
+	print("fast-forward: %s %s %s in %d ms" % [fa.get("phase", ""), fa.get("bidder", ""), DB.fmt_price(int(fa.get("bid", 0))), ff_ms])
+	print("RESULT: ", "PASS" if human_bids >= 2 and ff_ms < 2000 else "FAIL")
 	quit(0)

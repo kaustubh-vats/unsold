@@ -16,6 +16,7 @@ func _ready() -> void:
 	tv.add_child(UI.caption("Online room" if Game.store.is_online() else "Solo season", UI.GOLD))
 	tv.add_child(UI.display("Choose your franchise", 34))
 	top.add_child(tv)
+	top.add_child(UI.theme_button())
 	top.add_child(UI.sound_button())
 	add_child(top)
 	body = UI.vbox(14)
@@ -118,8 +119,12 @@ func _render() -> void:
 	sv.add_child(_setting("Winner decided by", UI.segmented(["Simulated season", "Team rating"], ["season", "score"],
 		st.get("win_mode", "season"), func(v): s.set_setting("win_mode", v), host)))
 	if s.is_online():
-		sv.add_child(_setting("Empty franchises", UI.segmented(["AI controlled", "Leave empty"], [true, false],
-			st.get("ai_fill", true), func(v): s.set_setting("ai_fill", v), host)))
+		var bots: bool = st.get("ai_fill", true)
+		sv.add_child(_setting("Opponents", UI.segmented(["Players + bots", "Real players only"], [true, false],
+			bots, func(v): s.set_setting("ai_fill", v), host)))
+		sv.add_child(UI.wrap(UI.label(
+			"2–10 real players. Franchises nobody picks are run by AI bots." if bots
+			else "2–10 real players. Only the franchises players pick take part — no bots.", 12, UI.DIM)))
 	if not host:
 		sv.add_child(UI.label("Only the host can change settings.", 13, UI.DIM))
 	body.add_child(sp)
@@ -128,9 +133,15 @@ func _render() -> void:
 	# Footer: start or wait.
 	if host:
 		var mine := s.my_team()
-		var start := UI.button("START AUCTION" if mine != "" else "PICK A FRANCHISE", func(): s.start_auction(), "primary", 20)
+		var humans := 0
+		for uid in s.state.get("players", {}):
+			if s.state["players"][uid].get("team", "") != "":
+				humans += 1
+		var short := s.is_online() and humans < 2
+		var label := "PICK A FRANCHISE" if mine == "" else ("WAITING FOR PLAYERS (%d/2)" % humans if short else "START AUCTION")
+		var start := UI.button(label, func(): s.start_auction(), "primary", 20)
 		start.custom_minimum_size.y = 60
-		start.disabled = mine == ""
+		start.disabled = mine == "" or short
 		footer.add_child(start)
 	else:
 		footer.add_child(UI.center(UI.label("Waiting for the host to start the auction…", 15, UI.MUTED)))
@@ -155,15 +166,15 @@ func _team_tile(t: Dictionary) -> Control:
 	b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	b.custom_minimum_size = Vector2(0, 86)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var base := Color(col.darkened(0.55), 0.78)
+	var base := UI.shade(col, 0.55, 0.78)
 	if mine:
-		b.add_theme_stylebox_override("normal", UI.glow(UI.box(Color(col.darkened(0.35), 0.9), 16, 8, UI.GOLD, 2), Color(UI.GOLD, 0.35), 12))
+		b.add_theme_stylebox_override("normal", UI.glow(UI.box(UI.shade(col, 0.35, 0.9), 16, 8, UI.GOLD, 2), Color(UI.GOLD, 0.35), 12))
 		b.add_theme_stylebox_override("hover", b.get_theme_stylebox("normal"))
 	else:
 		b.add_theme_stylebox_override("normal", UI.box(base, 16, 8, Color(col.lightened(0.2), 0.35)))
-		b.add_theme_stylebox_override("hover", UI.box(Color(col.darkened(0.4), 0.9), 16, 8, Color(col.lightened(0.3), 0.8)))
-	b.add_theme_stylebox_override("pressed", UI.box(Color(col.darkened(0.3), 0.95), 16, 8, UI.GOLD))
-	b.add_theme_stylebox_override("disabled", UI.box(Color(0.06, 0.07, 0.12, 0.7), 16, 8, UI.LINE))
+		b.add_theme_stylebox_override("hover", UI.box(UI.shade(col, 0.4, 0.9), 16, 8, Color(col.lightened(0.3), 0.8)))
+	b.add_theme_stylebox_override("pressed", UI.box(UI.shade(col, 0.3, 0.95), 16, 8, UI.GOLD))
+	b.add_theme_stylebox_override("disabled", UI.box(UI.ink(0.03), 16, 8, UI.LINE))
 	b.disabled = taken
 	b.pressed.connect(func():
 		UI._click()
