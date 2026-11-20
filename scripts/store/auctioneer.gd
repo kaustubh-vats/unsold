@@ -3,13 +3,15 @@ extends Node
 ## opens the next lot, and makes AI franchises bid. If the host leaves,
 ## another player's auctioneer takes over (see RtdbStore.try_take_over_host).
 
-const HUMANS_DONE_WINDOW := 1500   # ms the lot stays open once only AI is bidding
+const GOING_MS := 3600          # "going once… going twice…" before the hammer falls
 
 var store: Node
 var rng := RandomNumberGenerator.new()
 var _busy := false
 var _next_ai_at := 0
 var _lot_key := ""
+var _seen_n := -1
+var _ai_answered := false
 var _takeover_check := 0
 
 
@@ -55,32 +57,52 @@ func _tick() -> void:
 	if phase != "bidding":
 		return
 	var key := "%s|%d|%s" % [a.get("pid", ""), int(a.get("round", 1)), str(a.get("idx", 0))]
+	var n := int(a.get("n", 0))
 	if key != _lot_key:
 		_lot_key = key
-		# Give humans a moment to look at the player before AI jumps in.
-		_next_ai_at = now + rng.randi_range(1200, 2200)
-	var done := Auction.humans_done(state, now)
+		_seen_n = n
+		_ai_answered = false
+		# The auctioneer introduces the player first; paddles go up after he asks
+		# "who'll open the bidding?" (the line starts ~0.4 s after the lot opens).
+		var base := int(DB.player(a.get("pid", "")).get("base", 0))
+		_next_ai_at = now + 400 + Sfx.line_ms("open_%d" % base) + rng.randi_range(300, 900)
+	elif n != _seen_n:
+		# A new bid landed: the auctioneer calls it ("…anyone at X?") and only
+		# then do the AI rooms raise their paddles. They take a little longer to
+		# answer a human than another AI team; hard AI answers faster.
+		_seen_n = n
+		_ai_answered = false
+		var human_led := Auction.human_teams(state).has(a.get("bidder", ""))
+		var pace: float = AI.level(state)["pace"]
+		var think := int((rng.randi_range(500, 1000) if human_led else rng.randi_range(200, 500)) * pace)
+		_next_ai_at = now + Sfx.line_ms("bid_%d" % int(a.get("bid", 0))) + think
 	var ends := int(a.get("ends", 0))
-	if now >= ends:
+	# Never close a lot before the AI teams have had their chance to answer the last bid.
+	if now >= ends and now >= _next_ai_at and _ai_answered:
 		await _run(Auction.settle_updates(state, now))
-		return
-	if done and ends - now > HUMANS_DONE_WINDOW + 200:
-		await _run({"auction/ends": now + HUMANS_DONE_WINDOW})
 		return
 	if now < _next_ai_at:
 		return
-	var c := AI.choose_bidder(state, rng)
+	# Still mid-sentence (e.g. a queued line after a quick human bid): wait for him.
+	if Sfx.talking() and now < ends:
+		return
+	var humans_in := Auction.humans_in_play(state, now)
+	var c := AI.choose_bidder(state, rng, not humans_in)
 	if c.is_empty():
-		if done:
+		_ai_answered = true
+		# No AI wants him at this price. If every human is out or already leading,
+		# start the "going once, going twice" call; otherwise wait for the humans.
+		if Auction.humans_done(state, now) and ends - now > GOING_MS:
+			await _run({"auction/ends": now + GOING_MS})
+		elif now >= ends:
 			await _run(Auction.settle_updates(state, now))
 		else:
-			_next_ai_at = now + 500
+			_next_ai_at = now + 400
 		return
 	_busy = true
 	await store.place_bid(c["team"], c["amount"])
 	_busy = false
-	# AI-vs-AI bidding wars move quickly; humans can jump in at any moment.
-	_next_ai_at = store.now_ms() + rng.randi_range(300, 700)
+	_next_ai_at = store.now_ms() + 300
 
 
 func _run(updates: Dictionary) -> void:

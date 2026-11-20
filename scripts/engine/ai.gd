@@ -8,9 +8,32 @@ const TARGET := {"BAT": 6, "WK": 2, "AR": 5, "PACE": 6, "SPIN": 3}
 const MAX_PRICE := 2800.0
 
 
+## Difficulty levels (lobby setting "difficulty"). They only change how the AI
+## franchises bid; the rules, the purse and the match engine are the same for all.
+##   value:  how much AI teams are willing to pay overall
+##   noise:  how erratic their valuations are (easy AI misjudges players)
+##   skip:   chance an AI team simply isn't interested in a player
+##   spread: how steeply they pay up for stars (hard AI chases quality)
+##   pace:   how quickly they answer a human bid (multiplier on think time)
+const LEVELS := {
+	"easy":   {"value": 0.8,  "noise": [0.65, 1.15], "skip": 0.32, "spread": 10.5, "pace": 1.5},
+	"medium": {"value": 1.0,  "noise": [0.8, 1.2],   "skip": 0.18, "spread": 9.5,  "pace": 1.0},
+	"hard":   {"value": 1.1,  "noise": [0.92, 1.08], "skip": 0.07, "spread": 8.8,  "pace": 0.75},
+}
+
+
+static func level(state_or_diff) -> Dictionary:
+	var d := "medium"
+	if typeof(state_or_diff) == TYPE_STRING:
+		d = state_or_diff
+	elif typeof(state_or_diff) == TYPE_DICTIONARY:
+		d = str(state_or_diff.get("meta", {}).get("settings", {}).get("difficulty", "medium"))
+	return LEVELS.get(d, LEVELS["medium"])
+
+
 ## Rough market value of a player in lakh, from their overall rating.
-static func market_value(p: Dictionary) -> float:
-	var v := 22.0 * exp((float(p["ovr"]) - 50.0) / 9.5)
+static func market_value(p: Dictionary, spread := 9.5) -> float:
+	var v := 22.0 * exp((float(p["ovr"]) - 50.0) / spread)
 	if p["trait"] in ["dth", "fin"]:
 		v *= 1.08
 	return maxf(v, float(p["base"]))
@@ -44,10 +67,11 @@ static func aggression(seed: int, tid: String) -> float:
 
 ## The maximum this AI team is willing to pay for the player (lakh).
 ## Deterministic for (seed, team, player, squad state) so a new host behaves the same.
-static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int) -> int:
+static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium") -> int:
+	var lv := level(diff)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s|%s" % [seed, tid, p["id"]])
-	var v := market_value(p)
+	var v := market_value(p, lv["spread"]) * float(lv["value"])
 	var count := Rules.squad_count(team)
 	var counts := role_counts(team)
 	var role: String = p["role"]
@@ -82,7 +106,7 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	if short > 0 and lots_left < short * 4:
 		v *= 1.3
 	# Personality and noise.
-	v *= aggression(seed, tid) * rng.randf_range(0.8, 1.2)
+	v *= aggression(seed, tid) * rng.randf_range(lv["noise"][0], lv["noise"][1])
 	# Budget discipline (applied last): don't blow too much on one player,
 	# and never beyond a realistic record price.
 	var purse := float(team.get("purse", 0))
@@ -93,14 +117,18 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	cap = minf(cap, MAX_PRICE * rng.randf_range(0.85, 1.0))
 	v = minf(v, maxf(cap, float(p["base"])))
 	# Sometimes a team simply isn't interested.
-	if rng.randf() < 0.18:
+	if rng.randf() < float(lv["skip"]):
 		v = 0.0
 	return mini(int(v), Rules.max_affordable(team))
 
 
 ## Pick which AI team (if any) bids next on the current lot.
 ## Returns {"team": tid, "amount": n} or {} if no AI wants to bid.
-static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+## While a human is still in the bidding (`jump` false) the AI raises one
+## increment at a time, like paddles in a real auction room, so the human
+## always gets a turn to respond. Once every human is out, AI-vs-AI wars are
+## settled in a single jump to save time (and writes, online).
+static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator, jump := true) -> Dictionary:
 	var a: Dictionary = state.get("auction", {})
 	var p := DB.player(a.get("pid", ""))
 	if p.is_empty():
@@ -108,6 +136,7 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator) -> Dict
 	var amount := Auction.current_next(state)
 	var seed := int(state.get("meta", {}).get("seed", 1))
 	var lots_left: int = (a.get("lots", []) as Array).size() - int(a.get("idx", 0))
+	var diff := str(state.get("meta", {}).get("settings", {}).get("difficulty", "medium"))
 	var candidates := []
 	var teams: Dictionary = state.get("teams", {})
 	for tid in teams:
@@ -116,11 +145,15 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator) -> Dict
 			continue
 		if not Rules.can_bid(t, p, amount):
 			continue
-		var val := valuation(t, tid, p, seed, lots_left)
+		var val := valuation(t, tid, p, seed, lots_left, diff)
 		if val >= amount:
 			candidates.append([tid, val])
 	if candidates.is_empty():
 		return {}
+	if not jump:
+		# One paddle goes up: a random interested team raises by one increment.
+		var pick: Array = candidates[rng.randi_range(0, candidates.size() - 1)]
+		return {"team": pick[0], "amount": amount}
 	if candidates.size() == 1:
 		return {"team": candidates[0][0], "amount": amount}
 	# Several AI teams want the player: resolve their bidding war in one jump.
@@ -136,7 +169,6 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator) -> Dict
 		top_val = second_val
 		second_val = mini(second_val - 1, candidates[0][1])
 	var price := amount
-	var has_bidder: bool = a.get("bidder", "") != ""
 	while price <= second_val:
 		var nxt := Rules.next_bid(price, int(p.get("base", 0)), true)
 		if nxt > top_val:

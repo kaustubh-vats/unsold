@@ -3,7 +3,7 @@ extends RefCounted
 ## Pure auction logic over the shared room state dictionary.
 ##
 ## Room state shape (identical locally and in Firebase):
-##   meta:    {host, status, settings:{timer, win_mode, ai_fill}, seed, created}
+##   meta:    {host, status, settings:{timer, win_mode, ai_fill, difficulty}, seed, created}
 ##   players: {uid: {name, team, joined, seen}}
 ##   teams:   {tid: {purse, squad:{pid: price}, ai: bool, xi: [pid]}}
 ##   auction: {lots:[pid], idx, round, pid, bid, bidder, ends, phase, passes:{tid:true}}
@@ -145,6 +145,36 @@ static func humans_done(state: Dictionary, now := 0) -> bool:
 			continue  # cannot bid anyway
 		return false
 	return true
+
+
+## True while at least one (online) human team is still in the bidding for
+## this lot: it leads, or it hasn't passed and can afford the next bid.
+static func humans_in_play(state: Dictionary, now := 0) -> bool:
+	var a: Dictionary = state.get("auction", {})
+	var passes: Dictionary = a.get("passes", {})
+	var teams: Dictionary = state.get("teams", {})
+	var offline := _offline_teams(state, now)
+	var p := DB.player(a.get("pid", ""))
+	for tid in human_teams(state):
+		if not teams.has(tid) or offline.has(tid):
+			continue
+		if a.get("bidder", "") == tid:
+			return true
+		if passes.has(tid):
+			continue
+		if Rules.can_bid(teams[tid], p, current_next(state)):
+			return true
+	return false
+
+
+static func _offline_teams(state: Dictionary, now: int) -> Dictionary:
+	var offline := {}
+	if now > 0 and state.get("meta", {}).get("online", false):
+		var players: Dictionary = state.get("players", {})
+		for uid in players:
+			if now - int(players[uid].get("seen", 0)) > 15000:
+				offline[players[uid].get("team", "")] = true
+	return offline
 
 
 static func current_next(state: Dictionary) -> int:

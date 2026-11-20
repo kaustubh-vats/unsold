@@ -8,6 +8,9 @@ const SETTINGS := "user://audio.cfg"
 var music: AudioStreamPlayer
 var _pool: Array[AudioStreamPlayer] = []
 var _cache := {}
+var voice: AudioStreamPlayer      # the auctioneer: one line at a time
+var _voice_next := ""             # latest line waiting for the current one to finish
+var _lines := {}
 var music_on := true
 var sfx_on := true
 
@@ -21,6 +24,15 @@ func _ready() -> void:
 	music = AudioStreamPlayer.new()
 	music.volume_db = -14.0
 	add_child(music)
+	voice = AudioStreamPlayer.new()
+	voice.volume_db = 1.0
+	voice.finished.connect(_on_voice_done)
+	add_child(voice)
+	var f := FileAccess.open("res://data/auctioneer.json", FileAccess.READ)
+	if f:
+		var d = JSON.parse_string(f.get_as_text())
+		if d is Dictionary:
+			_lines = d
 	for i in 6:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
@@ -58,6 +70,59 @@ func play(name: String, volume_db := 0.0) -> void:
 	_pool[0].stream = s
 	_pool[0].volume_db = volume_db
 	_pool[0].play()
+
+
+## The auctioneer's words for a line ("bid_250", "open_75"), or "" if none.
+func line_text(name: String) -> String:
+	return str(_lines.get(name, ""))
+
+
+## The auctioneer calls a line. Calls never overlap: while he's talking, only the
+## most recent request is kept, so in a quick bidding war he skips straight to
+## the current price instead of lagging behind it.
+func say(name: String, interrupt := false) -> void:
+	if not sfx_on:
+		return
+	var path := DIR + "vo/" + name + ".mp3"
+	if not _lines.has(name) and not ResourceLoader.exists(DIR + name + ".mp3"):
+		return
+	if interrupt:
+		_voice_next = ""
+		voice.stop()
+	if voice.playing:
+		_voice_next = name
+		return
+	var s: AudioStream = _load("vo/" + name) if ResourceLoader.exists(path) else _load(name)
+	if s == null:
+		return
+	voice.stream = s
+	voice.play()
+	duck(s.get_length())
+
+
+## How long a line takes to say, in ms (0 if there is no clip). Used to pace
+## the AI so paddles go up after the auctioneer finishes, even with sound off.
+func line_ms(name: String) -> int:
+	var path := DIR + "vo/" + name + ".mp3"
+	var s: AudioStream = _load("vo/" + name) if ResourceLoader.exists(path) else _load(name)
+	return int(s.get_length() * 1000.0) if s != null else 0
+
+
+## True while the auctioneer is talking (or has a line queued).
+func talking() -> bool:
+	return voice.playing or _voice_next != ""
+
+
+func hush() -> void:
+	_voice_next = ""
+	voice.stop()
+
+
+func _on_voice_done() -> void:
+	if _voice_next != "":
+		var n := _voice_next
+		_voice_next = ""
+		say(n)
 
 
 func set_music(on: bool) -> void:

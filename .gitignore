@@ -35,3 +35,4 @@ Thumbs.db
 /android_plugin/build/
 /android_plugin/plugin/build/
 /android_plugin/local.properties
+config.local.gd.uid

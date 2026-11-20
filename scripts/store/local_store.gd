@@ -8,7 +8,7 @@ func setup(player_name: String) -> void:
 	state = {
 		"meta": {
 			"host": my_uid, "status": "lobby", "seed": randi() % 1000000,
-			"settings": {"timer": 10, "win_mode": "season", "ai_fill": true},
+			"settings": {"timer": 10, "win_mode": "season", "ai_fill": true, "difficulty": "medium"},
 			"created": now_ms(),
 		},
 		"players": {my_uid: {"name": player_name, "team": "", "joined": now_ms(), "seen": now_ms()}},

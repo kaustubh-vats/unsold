@@ -24,6 +24,8 @@ func test_increments() -> void:
 	ok(Rules.next_bid(400, 30, true) == 425, "+25 under 5 Cr")
 	ok(Rules.next_bid(1000, 30, true) == 1050, "+50 under 15 Cr")
 	ok(Rules.next_bid(1500, 30, true) == 1600, "+100 above 15 Cr")
+	ok(Rules.next_bid(75, 75, true) == 80, "odd base snaps to the ladder")
+	ok(Rules.next_bid(190, 30, true) == 200, "ladder crosses 2 Cr cleanly")
 
 
 func test_purse_reserve_and_caps() -> void:
@@ -134,8 +136,27 @@ func test_full_ai_auction() -> void:
 ## Several seeds: every auction must finish with legal squads and XIs.
 func test_many_auctions_valid() -> void:
 	for seed in [1, 2, 3, 5, 8, 13]:
+		_ai_auction(seed, ["easy", "medium", "hard"][seed % 3])
+
+
+## Difficulty: harder AI pays more for players and leaves fewer bargains.
+func test_difficulty_levels() -> void:
+	var spent := {}
+	for d in ["easy", "medium", "hard"]:
+		var total := 0
+		for seed in [4, 7]:
+			var state := _ai_auction(seed, d)
+			for tid in state["teams"]:
+				total += Rules.PURSE - int(state["teams"][tid]["purse"])
+		spent[d] = total / 2
+		print("      %s: avg ₹%.0f Cr spent across 10 teams" % [d, spent[d] / 100.0])
+	ok(spent["easy"] < spent["medium"] and spent["medium"] < spent["hard"], "easy < medium < hard spending")
+
+
+func _ai_auction(seed: int, diff: String) -> Dictionary:
+	if true:
 		var state := {"meta": {"host": "x", "status": "lobby", "seed": seed,
-			"settings": {"timer": 10, "ai_fill": true, "win_mode": "score"}}, "players": {}}
+			"settings": {"timer": 10, "ai_fill": true, "win_mode": "score", "difficulty": diff}}, "players": {}}
 		var now := 0
 		Auction.apply_updates(state, Auction.start_updates(state, now))
 		var rng := RandomNumberGenerator.new()
@@ -163,7 +184,9 @@ func test_many_auctions_valid() -> void:
 			ok(XI.problems(t["xi"], t["squad"].keys()).is_empty(), "seed %d %s XI %s" % [seed, tid, str(XI.problems(t["xi"], t["squad"].keys()))])
 			for pid in t["squad"]:
 				top = maxi(top, int(t["squad"][pid]))
-		ok(top >= 1200 and top <= 3500, "seed %d top price realistic (%s)" % [seed, DB.fmt_price(top)])
+		ok(top >= 1200 and top <= 3500, "seed %d (%s) top price realistic (%s)" % [seed, diff, DB.fmt_price(top)])
+		return state
+	return {}
 
 
 func test_season_deterministic() -> void:

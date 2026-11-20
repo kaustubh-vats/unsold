@@ -27,7 +27,9 @@ static func increment(current: int) -> int:
 static func next_bid(current: int, base: int, has_bidder: bool) -> int:
 	if not has_bidder:
 		return base
-	return current + increment(current)
+	# Snap to the clean ladder (…80, 90, 1 Cr, 1.2 Cr…) so a ₹75 L base goes 75 → 80 → 90.
+	var step := increment(current)
+	return (current / step + 1) * step
 
 
 static func squad_count(team: Dictionary) -> int:

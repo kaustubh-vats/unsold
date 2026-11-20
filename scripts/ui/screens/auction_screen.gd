@@ -42,6 +42,8 @@ var _last_n := -1
 var _last_bidder := ""
 var _last_tick := -1
 var _going_said := ""
+var _prompt := ""
+var say_label: Label
 
 
 func _ready() -> void:
@@ -141,6 +143,9 @@ func _build_bid_panel() -> void:
 	bv.add_child(bid_amount)
 	bid_team_box = UI.hbox(8)
 	bv.add_child(bid_team_box)
+	say_label = UI.label("", 12, UI.MUTED)
+	say_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bv.add_child(say_label)
 	bh.add_child(bv)
 	add_child(bid_panel)
 	call_label = UI.center(UI.display("", 24, UI.GOLD))
@@ -223,14 +228,15 @@ func _process(_dt: float) -> void:
 		_last_tick = secs
 		Sfx.play("tick", -6.0)
 	var bidder: String = a.get("bidder", "")
-	if bidder != "" and left < 3200:
-		call_label.text = "GOING TWICE…" if left < 1600 else "GOING ONCE…"
+	if bidder != "" and left < 3700:
+		call_label.text = "GOING TWICE…" if left < 1900 else "GOING ONCE…"
 		var key := "%s|%s" % [_lot_key, str(a.get("n", 0))]
-		if _going_said != key and left > 2200:
+		if _going_said != key and left > 3000:
 			_going_said = key
-			Sfx.play("vo_going", -2.0)
+			Sfx.say("vo_going", true)
+			say_label.text = "“Going once… going twice…”"
 	else:
-		call_label.text = ""
+		call_label.text = _prompt
 
 
 # ------------------------------------------------------------------ state → view
@@ -256,6 +262,7 @@ func _refresh() -> void:
 		status_label.text = ""
 		_last_n = -1
 		_last_bidder = ""
+		_announce_open(p)
 		card.pivot_offset = card.size / 2.0
 		card.modulate.a = 0.0
 		card.position.x += 30
@@ -273,6 +280,8 @@ func _refresh() -> void:
 			else:
 				Sfx.play("bid", -3.0)
 			UI.pop(bid_amount, 1.12)
+			# A human paddle cuts the auctioneer off mid-sentence; he picks up the new bid.
+			_announce_bid(amount, Auction.current_next(s.state), Auction.human_teams(s.state).has(bidder))
 		_last_n = n
 		_last_bidder = bidder
 	bid_caption.text = "CURRENT BID" if bidder != "" else "OPENING AT BASE PRICE"
@@ -307,6 +316,19 @@ func _refresh() -> void:
 	pass_btn.text = "PASSED" if passed else "PASS"
 	pass_btn.disabled = phase != "bidding" or leading or passed
 	status_label.text = err if (err != "" and phase == "bidding" and not leading) else ""
+	# Whose turn is it? Spell it out like an auctioneer would.
+	if phase != "bidding":
+		_prompt = ""
+	elif leading:
+		_prompt = "YOU LEAD — ANY ADVANCE?"
+	elif err != "":
+		_prompt = ""
+	elif passed:
+		_prompt = "YOU PASSED — BID AGAIN TO RE-ENTER"
+	elif bidder != "":
+		_prompt = "%s BID — YOUR CALL: %s?" % [DB.team_short(bidder), DB.fmt_price(next)]
+	else:
+		_prompt = "WHO'LL OPEN AT %s?" % DB.fmt_price(next)
 	head_purse.text = DB.fmt_price(int(t.get("purse", 0)))
 	stat_labels["Squad"].text = "%d/%d" % [Rules.squad_count(t), Rules.MAX_SQUAD]
 	stat_labels["Overseas"].text = "%d/%d" % [Rules.overseas_count(t), Rules.MAX_OVERSEAS]
@@ -343,6 +365,32 @@ func _show_player(p: Dictionary) -> void:
 	p_base.text = DB.fmt_price(int(p["base"]))
 
 
+# ------------------------------------------------------------------ auctioneer
+
+func _announce_open(p: Dictionary) -> void:
+	var base := int(p["base"])
+	var line := "open_%d" % base
+	var txt := Sfx.line_text(line)
+	if txt == "":
+		txt = "Next up, base price %s. Who'll open the bidding?" % DB.fmt_price(base)
+	say_label.text = "“%s”" % txt
+	# Let the SOLD call finish before the next lot is introduced.
+	var key := _lot_key
+	get_tree().create_timer(0.4).timeout.connect(func():
+		# Skip the intro if someone already opened the bidding in the meantime.
+		if is_instance_valid(self) and _lot_key == key and Game.store.auction().get("bidder", "") == "":
+			Sfx.say(line))
+
+
+func _announce_bid(amount: int, next: int, interrupt := false) -> void:
+	var line := "bid_%d" % amount
+	var txt := Sfx.line_text(line)
+	if txt == "":
+		txt = "%s! Anyone at %s?" % [DB.fmt_price(amount), DB.fmt_price(next)]
+	say_label.text = "“%s”" % txt
+	Sfx.say(line, interrupt)
+
+
 func _show_stamp(sold: bool, team: String, price: int) -> void:
 	UI.clear(stamp_box)
 	if sold:
@@ -358,12 +406,12 @@ func _show_stamp(sold: bool, team: String, price: int) -> void:
 		stamp_box.add_child(UI.center(UI.label(DB.team(team).get("name", ""), 15, UI.TEXT, true)))
 		Sfx.play("sold")
 		Sfx.duck(1.6)
-		get_tree().create_timer(0.35).timeout.connect(func(): Sfx.play("vo_sold"))
+		get_tree().create_timer(0.35).timeout.connect(func(): Sfx.say("vo_sold", true))
 	else:
 		stamp_box.add_child(UI.center(UI.display("UNSOLD", 80, UI.RED)))
 		stamp_box.add_child(UI.center(UI.caption("No franchise made a bid", UI.MUTED, 11)))
 		Sfx.play("unsold", -2.0)
-		get_tree().create_timer(0.2).timeout.connect(func(): Sfx.play("vo_unsold"))
+		get_tree().create_timer(0.2).timeout.connect(func(): Sfx.say("vo_unsold", true))
 	stamp.visible = true
 	stamp.modulate.a = 0.0
 	stamp_box.pivot_offset = card.size / 2.0

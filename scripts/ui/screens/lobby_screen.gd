@@ -105,6 +105,14 @@ func _render() -> void:
 	sp.add_child(sv)
 	var st := s.settings()
 	var host := s.is_host()
+	var diff: String = st.get("difficulty", "medium")
+	sv.add_child(_setting("AI difficulty", UI.segmented(["Easy", "Medium", "Hard"], ["easy", "medium", "hard"],
+		diff, func(v): s.set_setting("difficulty", v), host)))
+	sv.add_child(UI.wrap(UI.label({
+		"easy": "AI franchises bid cautiously and often misjudge players — bargains everywhere.",
+		"medium": "AI franchises bid like a typical auction room.",
+		"hard": "AI franchises bid hard for stars, rarely miss a good player and answer your bids fast.",
+	}.get(diff, ""), 12, UI.DIM)))
 	sv.add_child(_setting("Bid timer", UI.segmented(["8s", "10s", "15s", "20s"], [8, 10, 15, 20],
 		int(st.get("timer", 10)), func(v): s.set_setting("timer", v), host)))
 	sv.add_child(_setting("Winner decided by", UI.segmented(["Simulated season", "Team rating"], ["season", "score"],

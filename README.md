@@ -8,9 +8,12 @@ A realistic franchise-cricket auction game built in **Godot 4.7**. It runs on th
   - ₹120 Cr purse
   - squads of 18–25 players, with a maximum of 8 overseas
   - at most 4 overseas players in the XI
-  - a realistic T20-league bid increment ladder
+  - a clean T20-league bid ladder: +10 L up to ₹1 Cr, +20 L to ₹2 Cr, +25 L to ₹5 Cr, +50 L to ₹15 Cr, then +1 Cr
   - marquee and role-based sets, and an accelerated round for unsold players
   - you can't bid money you need to keep for filling the rest of your squad
+- **Live, turn-by-turn bidding**: while you're still in, AI franchises raise one increment at a time and every raise resets the clock, so the lot keeps coming back to you ("MUM BID — YOUR CALL: ₹4.5 Cr?"). A lot only goes "going once, going twice…" when nobody else wants the player. You can pass and bid again to re-enter.
+- **Auctioneer voice**: an ElevenLabs auctioneer calls every lot and bid ("Two crore fifty! Anyone at two crore seventy-five?"), with on-screen subtitles. In a fast bidding war he skips to the current price instead of falling behind.
+- **AI difficulty** (lobby setting): *Easy* AI bids cautiously and misjudges players, *Medium* behaves like a typical auction room, *Hard* chases stars, rarely skips a good player and answers your bids quickly.
 - **Choosing the winner**: the host picks one of two modes.
   - **Simulated season**: a ball-by-ball T20 match engine runs a round-robin league, then Qualifier 1, the Eliminator, Qualifier 2 and the Final, with a points table, NRR and scorecards.
   - **Team score**: each squad gets an instant rating for batting, bowling, balance, depth and value for money.
@@ -49,6 +52,7 @@ godot --path .
 ```
 godot --headless --path . -s res://tests/run_tests.gd      # engine unit tests
 godot --headless --path . -s res://tests/check_scripts.gd  # compile every script
+godot --headless --path . -s res://tests/bidding_flow.gd  # plays lots as a human who keeps raising
 godot --path . -s res://tests/ui_smoke.gd                  # drives the UI, saves screenshots to user://smoke
 ```
 
@@ -183,7 +187,7 @@ Audio was generated with the ElevenLabs CLI and lives in `assets/audio/`:
 
 - **Music**: `music_loop.mp3`, a 20-second seamless loop.
 - **Sound effects**: `bid`, `outbid`, `tick`, `sold` (gavel and applause), `unsold`, `click` and `win` (crowd and fanfare).
-- **Auctioneer voice**: `vo_sold`, `vo_unsold` and `vo_going` ("Going once… going twice…").
+- **Auctioneer voice**: `vo_sold`, `vo_unsold` and `vo_going` ("Going once… going twice…"), plus `vo/bid_<lakh>.mp3` for every value on the bid ladder and `vo/open_<base>.mp3` for each base price. The spoken text (also shown as subtitles) is in `data/auctioneer.json`.
 
 The `Sfx` autoload (`scripts/sfx.gd`) plays these. The speaker button in each screen header toggles the music, and the setting is remembered between sessions.
 

@@ -43,7 +43,7 @@ func create(player_name: String) -> String:
 	var room := {
 		"meta": {
 			"host": my_uid, "status": "lobby", "seed": randi() % 1000000, "created": now, "online": true,
-			"settings": {"timer": 10, "win_mode": "season", "ai_fill": true},
+			"settings": {"timer": 10, "win_mode": "season", "ai_fill": true, "difficulty": "medium"},
 		},
 		"players": {my_uid: {"name": player_name, "team": "", "joined": now, "seen": now}},
 	}
