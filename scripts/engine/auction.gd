@@ -46,7 +46,14 @@ static func build_lots(seed: int) -> Array:
 	rng.seed = seed
 	var ids := DB.all_ids()
 	ids.sort_custom(func(a, b): return DB.player(a)["ovr"] > DB.player(b)["ovr"])
-	var marquee := ids.slice(0, 12)
+	# The marquee set is 12 of the top ~22 players, different every auction.
+	var cands := ids.slice(0, 22)
+	var keyed_m := []
+	for id in cands:
+		keyed_m.append([DB.player(id)["ovr"] + rng.randf_range(-7.0, 7.0), id])
+	keyed_m.sort_custom(func(a, b): return a[0] > b[0])
+	var marquee := keyed_m.slice(0, 12).map(func(k): return k[1])
+	_shuffle(marquee, rng)
 	var sets := {}
 	for s in SET_ORDER:
 		sets[s] = []
@@ -58,13 +65,24 @@ static func build_lots(seed: int) -> Array:
 	var lots := []
 	for s in SET_ORDER:
 		var arr: Array = sets[s]
+		if s == "MARQUEE":
+			lots += arr
+			continue
 		var keyed := []
 		for id in arr:
-			keyed.append([DB.player(id)["ovr"] + rng.randf_range(-8.0, 8.0), id])
+			keyed.append([DB.player(id)["ovr"] + rng.randf_range(-14.0, 14.0), id])
 		keyed.sort_custom(func(a, b): return a[0] > b[0])
 		for k in keyed:
 			lots.append(k[1])
 	return lots
+
+
+static func _shuffle(arr: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(arr.size() - 1, 0, -1):
+		var j := rng.randi_range(0, i)
+		var tmp = arr[i]
+		arr[i] = arr[j]
+		arr[j] = tmp
 
 
 static func lot_set(state: Dictionary) -> String:
@@ -78,6 +96,57 @@ static func lot_set(state: Dictionary) -> String:
 	if lots.slice(0, 12).has(pid):
 		return "MARQUEE"
 	return set_of(DB.player(pid))
+
+
+## The set of the lot at index i ("MARQUEE", "BAT", … or "ACCEL" in round 2).
+static func set_at(lots: Array, i: int, rnd: int) -> String:
+	if rnd == 2:
+		return "ACCEL"
+	if i < 0 or i >= lots.size():
+		return ""
+	if i < 12:
+		return "MARQUEE"
+	return set_of(DB.player(lots[i]))
+
+
+## True when the current lot is the first of its set (time to announce it).
+static func set_starts(state: Dictionary) -> bool:
+	var a: Dictionary = state.get("auction", {})
+	var lots: Array = a.get("lots", [])
+	var idx := int(a.get("idx", 0))
+	var rnd := int(a.get("round", 1))
+	return idx == 0 or set_at(lots, idx, rnd) != set_at(lots, idx - 1, rnd)
+
+
+## Every player in the current set, in lot order, with where each one stands:
+## [{pid, status: "sold"|"unsold"|"live"|"next", team, price}].
+static func set_players(state: Dictionary) -> Array:
+	var a: Dictionary = state.get("auction", {})
+	var lots: Array = a.get("lots", [])
+	var idx := int(a.get("idx", 0))
+	var rnd := int(a.get("round", 1))
+	var cur := set_at(lots, idx, rnd)
+	var sold := sold_ids(state)
+	var prices := {}
+	for tid in state.get("teams", {}):
+		var sq: Dictionary = state["teams"][tid].get("squad", {})
+		for pid in sq:
+			prices[pid] = int(sq[pid])
+	var phase: String = a.get("phase", "")
+	var out := []
+	for i in lots.size():
+		if set_at(lots, i, rnd) != cur:
+			continue
+		var pid: String = lots[i]
+		var st := "next"
+		if sold.has(pid):
+			st = "sold"
+		elif i < idx or (i == idx and phase == "unsold"):
+			st = "unsold"
+		elif i == idx:
+			st = "live"
+		out.append({"pid": pid, "status": st, "team": sold.get(pid, ""), "price": prices.get(pid, 0)})
+	return out
 
 
 static func human_teams(state: Dictionary) -> Array:

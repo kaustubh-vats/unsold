@@ -15,8 +15,32 @@ var _ai_answered := false
 var _takeover_check := 0
 
 
+var _paused_at := 0
+
+
 func _ready() -> void:
 	rng.randomize()
+
+
+## Single player: the auction clock stops while the app is in the background
+## (phone call, app switch), so you come back to the same lot, not a missed one.
+func _notification(what: int) -> void:
+	if store == null or store.is_online():
+		return
+	if what == NOTIFICATION_APPLICATION_PAUSED:
+		if _paused_at == 0:
+			_paused_at = store.now_ms()
+	elif what == NOTIFICATION_APPLICATION_RESUMED:
+		if _paused_at == 0:
+			return
+		var away: int = store.now_ms() - _paused_at
+		_paused_at = 0
+		if away < 500 or store.status() != "auction":
+			return
+		_next_ai_at += away
+		var a: Dictionary = store.auction()
+		if a.has("ends"):
+			store.write({"auction/ends": int(a["ends"]) + away})
 
 
 func _process(_dt: float) -> void:
@@ -66,6 +90,15 @@ func _tick() -> void:
 		# "who'll open the bidding?" (the line starts ~0.4 s after the lot opens).
 		var base := int(DB.player(a.get("pid", "")).get("base", 0))
 		_next_ai_at = now + 400 + Sfx.line_ms("open_%d" % base) + rng.randi_range(300, 900)
+		# First lot of a new set: the auctioneer announces the set first, so
+		# hold the clock (and the AI paddles) for that long.
+		if Auction.set_starts(state) and n == 0 and int(a.get("intro", 0)) == 0 and not store.fast_forwarding():
+			var lots: Array = a.get("lots", [])
+			var st := Auction.set_at(lots, int(a.get("idx", 0)), int(a.get("round", 1)))
+			var intro := clampi(Sfx.line_ms("set_" + st.to_lower()), 2500, 8000) + 600
+			_next_ai_at += intro
+			await _run({"auction/ends": int(a.get("ends", 0)) + intro, "auction/intro": intro})
+			return
 	elif n != _seen_n:
 		# A new bid landed: the auctioneer calls it ("…anyone at X?") and only
 		# then do the AI rooms raise their paddles. They take a little longer to
@@ -87,8 +120,11 @@ func _tick() -> void:
 			_busy = false
 		return
 	var ends := int(a.get("ends", 0))
-	# Never close a lot before the AI teams have had their chance to answer the last bid.
-	if now >= ends and now >= _next_ai_at and _ai_answered:
+	# Close the lot once the clock has run out and the AI has answered the last
+	# bid. If we're already past the bid grace window (bids are rejected 300 ms
+	# after the clock ends, e.g. after the app was in the background), close it
+	# now: waiting for the AI would retry a rejected bid forever.
+	if now >= ends and (_ai_answered or now - ends > 250):
 		await _run(Auction.settle_updates(state, now))
 		return
 	if now < _next_ai_at:

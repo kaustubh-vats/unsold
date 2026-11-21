@@ -280,6 +280,41 @@ static func button(text: String, cb: Callable, kind := "normal", size := 17) -> 
 
 
 ## Compact outlined text button for inline row actions.
+## A panel that acts like a button: tap (press + release inside, no scroll
+## drag in between) calls cb. Unlike a Button it sizes to its content.
+static func tap_panel(style: StyleBoxFlat, cb: Callable) -> PanelContainer:
+	var p := PanelContainer.new()
+	p.add_theme_stylebox_override("panel", style)
+	p.mouse_filter = Control.MOUSE_FILTER_STOP
+	p.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+	var hover := style.duplicate() as StyleBoxFlat
+	hover.border_color = GOLD
+	hover.border_width_left = maxi(1, style.border_width_left)
+	hover.border_width_right = maxi(1, style.border_width_right)
+	hover.border_width_top = maxi(1, style.border_width_top)
+	hover.border_width_bottom = maxi(1, style.border_width_bottom)
+	p.mouse_entered.connect(func(): p.add_theme_stylebox_override("panel", hover))
+	p.mouse_exited.connect(func(): p.add_theme_stylebox_override("panel", style))
+	var down := [false]
+	p.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT:
+			if e.pressed:
+				down[0] = true
+			elif down[0]:
+				down[0] = false
+				if Rect2(Vector2.ZERO, p.size).has_point(e.position):
+					_click()
+					cb.call())
+	return p
+
+
+## Adds content to a tap panel, making the content click-through.
+static func fill_tap(p: PanelContainer, content: Control) -> PanelContainer:
+	ignore_mouse(content)
+	p.add_child(content)
+	return p
+
+
 static func small_button(text: String, cb: Callable) -> Button:
 	var b := button(text, cb, "ghost", 12)
 	b.custom_minimum_size = Vector2(64, 34)
@@ -367,7 +402,7 @@ static func expand(c: Control) -> Control:
 
 
 static func scroll(content: Control) -> ScrollContainer:
-	var s := ScrollContainer.new()
+	var s := TouchScroll.new()
 	s.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	s.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL

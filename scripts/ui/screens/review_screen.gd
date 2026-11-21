@@ -27,6 +27,9 @@ func _ready() -> void:
 	add_child(counters)
 	problems_label = UI.wrap(UI.label("", 13, UI.RED, true))
 	add_child(problems_label)
+	var others := UI.button("SEE ALL SQUADS & RATINGS  ›", _open_squads, "ghost", 14)
+	others.custom_minimum_size.y = 40
+	add_child(others)
 	list = UI.vbox(6)
 	add_child(UI.scroll(list))
 	var row := UI.hbox()
@@ -154,3 +157,24 @@ func _confirm() -> void:
 	confirm_btn.disabled = true
 	await s.set_xi(s.my_team(), XI.order_batting(xi))
 	await s.set_ready(true)
+
+
+## Every franchise's squad, its playing XI (or the predicted one if that
+## manager hasn't confirmed yet) and its squad rating, before the results.
+func _open_squads() -> void:
+	Sheet.open(self, "ALL SQUADS", func(body: VBoxContainer, sh: Sheet):
+		body.add_child(UI.wrap(UI.label("Ranked by squad rating. Tap a team for its XI and full squad.", 12, UI.MUTED)))
+		Views.teams_list(body, func(tid): sh.push(DB.team(tid).get("name", "").to_upper(), func(b, _s): _team_page(b, tid)), "rating"))
+
+
+func _team_page(body: VBoxContainer, tid: String) -> void:
+	var s := Game.store
+	var t := s.team(tid)
+	var squad: Array = t.get("squad", {}).keys()
+	var team_xi: Array = Game._xis().get(tid, [])
+	var confirmed: bool = not t.get("xi", []).is_empty()
+	if tid == s.my_team() and XI.problems(xi, squad).is_empty():
+		team_xi = XI.order_batting(xi)
+		confirmed = true
+	Views.team_page(body, tid, {"xi": team_xi, "xi_title": "PLAYING XI" if confirmed else "PREDICTED XI",
+		"rating": Score.rate(t, team_xi)})

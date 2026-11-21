@@ -15,11 +15,19 @@ A realistic franchise-cricket auction game built in **Godot 4.7**. It runs on th
 - **Auctioneer voice**: an ElevenLabs auctioneer calls every lot and bid ("Two crore fifty! Anyone at two crore seventy-five?"), with on-screen subtitles. In a fast bidding war he skips to the current price instead of falling behind.
 - **Fast-forward** (single player): the ▶▶ button skips to the final bid of the current lot.
 - **Squad views**: the "my team" panel at the top of the auction shows your purse, squad, overseas count, max bid and role balance; tap it (or any franchise tile, or *All teams*) for a full sheet with every player bought, money spent and XI strength.
+- **Before the results**: after the auction, *See all squads & ratings* on the XI screen shows every franchise's squad, its playing (or predicted) XI and its rating. The results screen has the same squads with each player's season numbers.
+- **Every game is different**: the marquee set and lot order are reshuffled. Each AI franchise gets a new plan every auction: the roles it prizes, star-chasing or depth, overseas appetite, spending early or late, and how much it will put on one player. The market "hype" around each player also changes. Matches add pitches, dew, tosses and daily form.
 - **Light and dark themes**: the sun/moon button in each header switches theme; the choice is remembered.
 - **Online opponents**: the host picks *Players + bots* (AI runs unpicked franchises) or *Real players only*. Rooms take 2–10 players.
 - **AI difficulty** (lobby setting): *Easy* AI bids cautiously and misjudges players, *Medium* behaves like a typical auction room, *Hard* chases stars, rarely skips a good player and answers your bids quickly.
 - **Choosing the winner**: the host picks one of two modes.
-  - **Simulated season**: a ball-by-ball T20 match engine runs a round-robin league, then Qualifier 1, the Eliminator, Qualifier 2 and the Final, with a points table, NRR and scorecards.
+  - **Simulated season**: a ball-by-ball T20 match engine plays a round-robin league (each round every team plays once, home and away alternating), then Qualifier 1, the Eliminator, Qualifier 2 and the Final, with a points table and NRR.
+    - Each match has a home venue, a pitch (flat, green, dry turner, slow), possible dew, a toss and a decision, and a form rating for every player on the day.
+    - Every ball weighs the batter (skill, form, how set they are, role and phase fit, home) against the bowler (skill, form, pitch, powerplay/death specialism, dew). It also accounts for how hard the batting side is pushing: the required rate, wickets in hand, death overs.
+    - Captains rotate bowlers by phase, save their death bowler and take off expensive bowlers.
+    - Wides, no-balls with free hits, byes and leg-byes, dismissals with fielders (caught, bowled, lbw, stumped, run out, caught and bowled), maidens, fall of wickets and Super Overs for ties are all simulated.
+    - **Matches** tab: every result, with a full scorecard for each match: batting with dismissals and strike rates, extras, fall of wickets, bowling figures and a runs-per-over chart.
+    - **Stats** tab: Orange and Purple Caps, MVP, most sixes, best innings and best bowling.
   - **Team score**: each squad gets an instant rating for batting, bowling, balance, depth and value for money.
 - 214 fictional players. Each default name is a sound-alike: it keeps a similar first initial and a different surname, so fans can tell who's who without real names being used.
 - **Roster editor** (home screen → *Roster editor*): rename any player or team, including team codes, on your own device.

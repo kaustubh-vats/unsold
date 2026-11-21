@@ -72,13 +72,15 @@ func _ready() -> void:
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	if mode == "season":
 		_add_tab(tabs, "Table", _table())
-		_add_tab(tabs, "Playoffs", _matches(res["season"]["playoffs"], false))
+		_add_tab(tabs, "Matches", _matches_tab())
+		_add_tab(tabs, "Stats", _stats_tab())
+		_add_tab(tabs, "Squads", _squads())
 		_add_tab(tabs, "Ratings", _ratings())
-		_add_tab(tabs, "Matches", _matches(res["season"]["matches"], true))
 	else:
 		_add_tab(tabs, "Ratings", _ratings())
+		_add_tab(tabs, "Squads", _squads())
 		_add_tab(tabs, "Season", _table())
-	_add_tab(tabs, "Squads", _squads())
+		_add_tab(tabs, "Matches", _matches_tab())
 	add_child(tabs)
 
 	var row := UI.hbox()
@@ -129,10 +131,14 @@ func _cell(text: String, w: int, color := UI.TEXT, display := false, align := HO
 	return l
 
 
+func _row_style(highlight: bool) -> StyleBoxFlat:
+	return UI.box(Color(UI.GOLD, 0.1) if highlight else UI.ink(0.03), 12, 8,
+		Color(UI.GOLD, 0.5) if highlight else Color(0, 0, 0, 0))
+
+
 func _row_panel(highlight: bool) -> PanelContainer:
 	var p := PanelContainer.new()
-	p.add_theme_stylebox_override("panel", UI.box(Color(UI.GOLD, 0.1) if highlight else UI.ink(0.03), 12, 8,
-		Color(UI.GOLD, 0.5) if highlight else Color(0, 0, 0, 0)))
+	p.add_theme_stylebox_override("panel", _row_style(highlight))
 	return p
 
 
@@ -153,9 +159,9 @@ func _table() -> Control:
 	var rows: Array = res["season"]["table"]
 	for i in rows.size():
 		var r: Dictionary = rows[i]
-		var p := _row_panel(r["team"] == my)
+		var rt: String = r["team"]
+		var p := Views.tap_panel(_row_style(rt == my), func(): _open_team(rt))
 		var h := UI.hbox(4)
-		p.add_child(h)
 		h.add_child(_cell(str(i + 1), 22, UI.GREEN if i < 4 else UI.DIM, true, HORIZONTAL_ALIGNMENT_LEFT))
 		h.add_child(UI.crest(r["team"], 32))
 		var nm := UI.label(DB.team_short(r["team"]), 15, UI.TEXT, true)
@@ -166,71 +172,96 @@ func _table() -> Control:
 		h.add_child(_cell(str(r["l"]), 34, UI.MUTED))
 		h.add_child(_cell(str(r["pts"]), 34, UI.GOLD, true))
 		h.add_child(_cell("%+.3f" % r["nrr"], 58, UI.MUTED))
+		Views.fill_tap(p, h)
 		v.add_child(p)
-	v.add_child(UI.caption("Top 4 qualify for the playoffs", UI.DIM, 10))
+	v.add_child(UI.caption("Top 4 qualify for the playoffs  •  tap a team for its squad and season stats", UI.DIM, 10))
 	return v
 
 
-func _matches(list: Array, newest_first: bool) -> Control:
+# ------------------------------------------------------------------ matches
+
+var _match_list: VBoxContainer
+var _mine_only := false
+
+
+func _all_matches() -> Array:
+	return res["season"]["matches"] + res["season"]["playoffs"]
+
+
+func _matches_tab() -> Control:
 	var v := UI.vbox(8)
-	var arr := list.duplicate()
-	if newest_first:
-		arr.reverse()
-	var my := Game.store.my_team()
-	for m in arr:
-		var mine: bool = m["a"] == my or m["b"] == my
-		var p := _row_panel(mine)
-		var mv := UI.vbox(4)
-		p.add_child(mv)
-		mv.add_child(UI.caption(m["stage"], UI.GOLD if m["stage"] == "Final" else UI.MUTED, 10))
-		mv.add_child(_score_line(m["first"], m["s1"], m["winner"] == m["first"]))
-		mv.add_child(_score_line(m["second"], m["s2"], m["winner"] == m["second"]))
-		mv.add_child(UI.label("%s won %s  •  Player of the match: %s" % [DB.team_short(m["winner"]), m["margin"], DB.player(m["pom"]).get("name", "-")], 12, UI.MUTED))
-		var details := UI.vbox(2)
-		details.visible = false
-		var toggle := func():
-			if details.get_child_count() == 0:
-				_fill_scorecard(details, m)
-			details.visible = not details.visible
-		var btn := UI.button("Scorecard ▾", toggle, "ghost", 13)
-		btn.custom_minimum_size.y = 34
-		mv.add_child(btn)
-		mv.add_child(details)
-		v.add_child(p)
-	if arr.is_empty():
-		v.add_child(UI.label("No playoffs — not enough teams.", 14, UI.MUTED))
+	v.add_child(UI.segmented(["All matches", "My matches"], [false, true], _mine_only, func(val):
+		_mine_only = val
+		_fill_matches()))
+	_match_list = UI.vbox(8)
+	v.add_child(_match_list)
+	_fill_matches()
 	return v
 
 
-func _score_line(tid: String, score: String, won: bool) -> Control:
-	var h := UI.hbox(8)
-	h.add_child(UI.crest(tid, 30))
-	var n := UI.label(DB.team(tid).get("name", tid), 14, UI.TEXT if won else UI.MUTED, won)
-	n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	n.clip_text = true
-	h.add_child(n)
-	h.add_child(UI.display(score, 22, UI.GOLD if won else UI.MUTED))
-	return h
+func _fill_matches() -> void:
+	UI.clear(_match_list)
+	var my := Game.store.my_team()
+	var keep := func(m): return not _mine_only or m["a"] == my or m["b"] == my
+	var po: Array = res["season"]["playoffs"].filter(keep)
+	if not po.is_empty():
+		_match_list.add_child(Views.section("PLAYOFFS"))
+		var arr := po.duplicate()
+		arr.reverse()   # the Final first
+		for m in arr:
+			_match_list.add_child(Views.match_card(m, my, _open_match))
+	var lg: Array = res["season"]["matches"].filter(keep)
+	if not lg.is_empty():
+		var w := 0
+		for m in lg:
+			if m["winner"] == my:
+				w += 1
+		_match_list.add_child(UI.spacer(4, 0))
+		_match_list.add_child(Views.section("LEAGUE STAGE", ("You won %d of %d" % [w, lg.size()]) if _mine_only else "%d matches" % lg.size()))
+		for m in lg:
+			_match_list.add_child(Views.match_card(m, my, _open_match))
 
 
-func _fill_scorecard(v: VBoxContainer, m: Dictionary) -> void:
-	for pair in [[m["first"], m["i1"]], [m["second"], m["i2"]]]:
-		v.add_child(UI.hline())
-		v.add_child(UI.caption("%s innings  •  %s" % [DB.team_short(pair[0]), Sim.score_str(pair[1])], UI.GOLD, 11))
-		for c in pair[1]["bat"]:
-			var h := UI.hbox(4)
-			var n := UI.label(DB.player(c["id"])["name"] + ("" if c["out"] else " *"), 13)
-			n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			h.add_child(n)
-			h.add_child(_cell("%d (%d)" % [c["r"], c["b"]], 74, UI.TEXT if c["r"] >= 30 else UI.MUTED))
-			v.add_child(h)
-		for b in pair[1]["bowl"]:
-			var h2 := UI.hbox(4)
-			var n2 := UI.label("   " + DB.player(b["id"])["name"], 12, UI.MUTED)
-			n2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			h2.add_child(n2)
-			h2.add_child(_cell("%s–%d–%d" % [Sim.overs_str(b["balls"]), b["r"], b["w"]], 80, UI.MUTED))
-			v.add_child(h2)
+func _open_match(m: Dictionary) -> void:
+	var title := "%s v %s" % [DB.team_short(m["first"]), DB.team_short(m["second"])]
+	Sheet.open(self, title, func(body: VBoxContainer, _sh: Sheet): Views.scorecard(body, m))
+
+
+func _stats_tab() -> Control:
+	var v := UI.vbox(6)
+	Views.season_leaders(v, res["season"]["stats"], func(i: int): _open_match(_all_matches()[i]))
+	return v
+
+
+func _open_team(tid: String) -> void:
+	var xis := Game._xis()
+	var t := Game.store.team(tid)
+	var stats: Dictionary = res["season"].get("stats", {}).get("players", {})
+	Sheet.open(self, DB.team(tid).get("name", "").to_upper(), func(body: VBoxContainer, _sh: Sheet):
+		_team_record(body, tid)
+		Views.team_page(body, tid, {"xi": xis.get(tid, []), "stats": stats, "rating": Score.rate(t, xis.get(tid, []))}))
+
+
+## Season summary for one team: finish, W-L, NRR and its results.
+func _team_record(body: VBoxContainer, tid: String) -> void:
+	if mode != "season":
+		return
+	var rows: Array = res["season"]["table"]
+	for i in rows.size():
+		if rows[i]["team"] != tid:
+			continue
+		var r: Dictionary = rows[i]
+		var h := UI.hbox(8)
+		h.add_child(UI.chip("#%d IN LEAGUE" % (i + 1), Color(UI.GOLD, 0.18), UI.GOLD, 10))
+		h.add_child(UI.chip("%d W – %d L" % [r["w"], r["l"]], UI.ink(0.08), UI.TEXT, 10))
+		h.add_child(UI.chip("NRR %+.3f" % r["nrr"], UI.ink(0.08), UI.MUTED, 10))
+		if res["season"]["champion"] == tid:
+			h.add_child(UI.chip("CHAMPIONS", Color(UI.GREEN, 0.2), UI.GREEN, 10))
+		body.add_child(h)
+		var form := UI.hbox(4)
+		for f in r.get("form", []):
+			form.add_child(UI.chip(f, Color(UI.GREEN, 0.2) if f == "W" else Color(UI.RED, 0.2), UI.GREEN if f == "W" else UI.soft(UI.RED), 10))
+		body.add_child(form)
 
 
 func _ratings() -> Control:
@@ -262,30 +293,8 @@ func _ratings() -> Control:
 
 func _squads() -> Control:
 	var v := UI.vbox(8)
-	var s := Game.store
-	var teams: Dictionary = s.state.get("teams", {})
-	var xis := Game._xis()
-	for tid in DB.team_ids():
-		if not teams.has(tid):
-			continue
-		var t: Dictionary = teams[tid]
-		var p := _row_panel(tid == s.my_team())
-		var pv := UI.vbox(4)
-		p.add_child(pv)
-		var h := UI.hbox(8)
-		h.add_child(UI.crest(tid, 34))
-		var who := s.team_owner_name(tid)
-		var n := UI.label(DB.team(tid)["name"] + ("" if who == "" else "  (%s)" % who), 14, UI.TEXT, true)
-		n.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		n.clip_text = true
-		h.add_child(n)
-		h.add_child(UI.caption("Left " + DB.fmt_price(int(t.get("purse", 0))), UI.GOLD, 10))
-		pv.add_child(h)
-		var names := []
-		for pid in xis.get(tid, []):
-			names.append(DB.player(pid)["name"])
-		pv.add_child(UI.wrap(UI.label(", ".join(names), 12, UI.MUTED)))
-		v.add_child(p)
+	v.add_child(UI.wrap(UI.label("Every franchise's XI and squad, ranked by rating. Tap one for details.", 12, UI.MUTED)))
+	Views.teams_list(v, _open_team, "rating")
 	return v
 
 

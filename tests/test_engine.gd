@@ -85,6 +85,29 @@ func test_set_path() -> void:
 	ok(Auction.read_path(s, "auction/idx") == 2, "get_path")
 
 
+func test_sets() -> void:
+	var lots := Auction.build_lots(7)
+	var state := {"teams": {"MUM": {"squad": {}}}, "auction": {"lots": lots, "idx": 0, "round": 1, "phase": "bidding"}}
+	ok(Auction.set_starts(state), "first lot starts a set")
+	var marquee := Auction.set_players(state)
+	ok(marquee.size() == 12 and marquee[0]["status"] == "live", "marquee has 12, first live")
+	state["auction"]["idx"] = 12
+	ok(Auction.set_starts(state), "lot 13 starts the next set")
+	state["auction"]["idx"] = 13
+	ok(not Auction.set_starts(state), "lot 14 is mid-set")
+	state["teams"]["MUM"]["squad"][lots[12]] = 200
+	var bat := Auction.set_players(state)
+	ok(bat[0]["status"] == "sold" and bat[0]["team"] == "MUM" and bat[0]["price"] == 200, "sold entry")
+	ok(bat[1]["status"] == "live" and bat[2]["status"] == "next", "live and upcoming")
+	var n := 0
+	for i in lots.size():
+		if Auction.set_at(lots, i, 1) == Auction.set_at(lots, 13, 1):
+			n += 1
+	ok(bat.size() == n, "set size matches")
+	state["auction"]["round"] = 2
+	ok(Auction.set_at(lots, 5, 2) == "ACCEL", "round 2 is accelerated")
+
+
 ## Run a full auction with only AI teams and check every squad is legal.
 func test_full_ai_auction() -> void:
 	var state := {"meta": {"host": "x", "status": "lobby", "seed": 42,
@@ -201,20 +224,31 @@ func test_season_deterministic() -> void:
 
 
 func test_scores_realistic() -> void:
+	# Two typical auction squads: players dealt round-robin by rating.
 	var ids := DB.all_ids()
-	var xi := XI.best_xi(ids.slice(0, 40))
+	ids.sort_custom(func(a, b): return DB.player(a)["ovr"] > DB.player(b)["ovr"])
+	var sa := []
+	var sb := []
+	for i in mini(ids.size(), 220):
+		if i % 10 == 0:
+			sa.append(ids[i])
+		elif i % 10 == 5:
+			sb.append(ids[i])
+	var xi := XI.best_xi(sa)
+	var xi_b := XI.best_xi(sb)
 	var total := 0
 	var wk := 0
 	var n := 200
 	for i in n:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = i
-		var inn := Sim.innings(xi, xi, -1, rng)
+		var inn := Sim.innings(xi, xi_b, -1, rng)
 		total += inn["runs"]
 		wk += inn["wkts"]
 	var avg := total / float(n)
 	print("        avg first-innings score %.1f, avg wickets %.1f" % [avg, wk / float(n)])
-	ok(avg > 140 and avg < 215, "average T20 score realistic (%.1f)" % avg)
+	ok(avg > 150 and avg < 205, "average T20 score realistic (%.1f)" % avg)
+	ok(wk / float(n) > 4.0 and wk / float(n) < 8.0, "average wickets realistic")
 
 
 func test_stronger_team_wins_more() -> void:

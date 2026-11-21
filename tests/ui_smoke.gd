@@ -92,8 +92,10 @@ func _run() -> void:
 			scr._open_sheet("teams")
 			await _wait(0.4)
 			await _shot("5c_sheet_teams")
-			scr.sheet_back = ""
-			scr._close_sheet()
+			scr._open_sheet("set")
+			await _wait(0.4)
+			await _shot("5c2_sheet_set")
+			scr.sheet.close()
 			UI.set_light(true, false)
 			game.theme_changed.emit()
 			await _wait(0.6)
@@ -101,8 +103,7 @@ func _run() -> void:
 			main.screen._open_sheet("team:CHE")
 			await _wait(0.6)
 			await _shot("5e_sheet_light")
-			main.screen.sheet_back = ""
-			main.screen._close_sheet()
+			main.screen.sheet.close()
 	# Finish whatever is left.
 	while s.state["meta"]["status"] == "auction":
 		var a2: Dictionary = s.state["auction"]
@@ -118,13 +119,49 @@ func _run() -> void:
 	s.auctioneer.set_process(true)
 	await _wait(0.8)
 	await _shot("6_review_light")
+	UI.set_light(false, false)
+	game.theme_changed.emit()
+	await _wait(0.5)
+	main.screen._open_squads()
+	await _wait(0.6)
+	await _shot("6b_review_all_squads")
+	var sq_sheet: Sheet = main.screen.get_children().filter(func(c): return c is Sheet)[0]
+	sq_sheet.push("MUMBAI", func(b, _s): main.screen._team_page(b, "MUM"))
+	await _wait(0.4)
+	await _shot("6c_review_team_xi")
+	sq_sheet.close()
+	await _wait(0.3)
 	await s.set_xi("CHE", XI.best_xi(s.team("CHE")["squad"].keys()))
 	await s.set_ready(true)
 	await _wait(1.5)
-	await _shot("7_results_light")
-	UI.set_light(false, false)
-	game.theme_changed.emit()
+	await _shot("7_results")
+	var tabs: TabContainer = main.screen.get_children().filter(func(c): return c is TabContainer)[0]
+	tabs.current_tab = 1
+	await _wait(0.4)
+	await _shot("8_results_matches")
+	var res: Dictionary = game.results()
+	main.screen._open_match(res["season"]["playoffs"][-1])
+	await _wait(0.6)
+	await _shot("8b_scorecard_top")
+	var sc_sheet: Sheet = main.screen.get_children().filter(func(c): return c is Sheet)[0]
+	sc_sheet.scroll.scroll_vertical = 700
 	await _wait(0.3)
-	await _shot("8_results_dark")
+	await _shot("8c_scorecard_mid")
+	sc_sheet.scroll.scroll_vertical = 1500
+	await _wait(0.3)
+	await _shot("8d_scorecard_bowling")
+	sc_sheet.close()
+	tabs.current_tab = 2
+	await _wait(0.4)
+	await _shot("9_results_stats")
+	main.screen._open_team("CHE")
+	await _wait(0.5)
+	await _shot("9b_results_team")
+	UI.set_light(true, false)
+	game.theme_changed.emit()
+	await _wait(0.5)
+	main.screen._open_match(res["season"]["matches"][0])
+	await _wait(0.6)
+	await _shot("9c_scorecard_light")
 	print("SMOKE DONE")
 	quit(0)

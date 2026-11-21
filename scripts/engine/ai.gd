@@ -62,16 +62,50 @@ static func most_needed_role(team: Dictionary) -> String:
 static func aggression(seed: int, tid: String) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s" % [seed, tid])
-	return rng.randf_range(0.85, 1.2)
+	return rng.randf_range(0.82, 1.22)
+
+
+## A team's plan for this auction, different every game: which roles it rates
+## (one side builds around spin, another hoards pace), whether it chases stars
+## or spreads the money, how it treats overseas players, whether it spends
+## early or keeps powder dry, and how picky it is.
+static func strategy(seed: int, tid: String) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d|plan|%s" % [seed, tid])
+	var roles := {}
+	for r in TARGET:
+		roles[r] = rng.randf_range(0.82, 1.22)
+	return {
+		"roles": roles,
+		"star": rng.randf_range(-0.9, 0.9),     # + = pays up for stars, − = values depth
+		"overseas": rng.randf_range(0.85, 1.15),
+		"early": rng.randf_range(0.85, 1.15),   # > 1 spends early, < 1 saves for later
+		"picky": rng.randf_range(0.6, 1.5),     # scales the chance of sitting a lot out
+		"cap_star": rng.randf_range(0.15, 0.27), # most of the purse it will put on one star
+		"cap": rng.randf_range(0.11, 0.19),      # ...and on anyone else
+	}
+
+
+## How hot the market is for a player this auction (same for every team):
+## some years a player is the talk of the town, other years he goes cheap.
+static func hype(seed: int, pid: String) -> float:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash("%d|hype|%s" % [seed, pid])
+	return clampf(rng.randfn(1.0, 0.2), 0.6, 1.55)
 
 
 ## The maximum this AI team is willing to pay for the player (lakh).
 ## Deterministic for (seed, team, player, squad state) so a new host behaves the same.
 static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium") -> int:
 	var lv := level(diff)
+	var plan := strategy(seed, tid)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s|%s" % [seed, tid, p["id"]])
-	var v := market_value(p, lv["spread"]) * float(lv["value"])
+	var v := market_value(p, float(lv["spread"]) - float(plan["star"])) * float(lv["value"])
+	v *= hype(seed, p["id"]) * float(plan["roles"][p["role"]])
+	if p["overseas"]:
+		v *= float(plan["overseas"])
+	v *= float(plan["early"]) if lots_left > 120 else 2.0 - float(plan["early"])
 	var count := Rules.squad_count(team)
 	var counts := role_counts(team)
 	var role: String = p["role"]
@@ -111,13 +145,13 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	# and never beyond a realistic record price.
 	var purse := float(team.get("purse", 0))
 	var slots := float(maxi(1, Rules.MIN_SQUAD - count))
-	var cap := purse * (0.21 if p["ovr"] >= 88 else 0.15)
+	var cap := purse * (float(plan["cap_star"]) if p["ovr"] >= 88 else float(plan["cap"]))
 	if slots <= 3:
 		cap = purse * 0.6
 	cap = minf(cap, MAX_PRICE * rng.randf_range(0.85, 1.0))
 	v = minf(v, maxf(cap, float(p["base"])))
 	# Sometimes a team simply isn't interested.
-	if rng.randf() < float(lv["skip"]):
+	if rng.randf() < float(lv["skip"]) * float(plan["picky"]):
 		v = 0.0
 	return mini(int(v), Rules.max_affordable(team))
 

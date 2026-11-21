@@ -8,7 +8,6 @@ extends VBoxContainer
 
 const TimerRing := preload("res://scripts/ui/timer_ring.gd")
 const TRAITS := {"op": "OPENER", "fin": "FINISHER", "pp": "POWERPLAY", "dth": "DEATH OVERS", "anc": "ANCHOR"}
-const ROLE_TITLES := {"WK": "Wicket-keepers", "BAT": "Batters", "AR": "All-rounders", "PACE": "Pace bowlers", "SPIN": "Spinners"}
 
 var set_label: Label
 var lot_label: Label
@@ -28,6 +27,8 @@ var p_bars: VBoxContainer
 var p_base: Label
 var stamp: Control
 var stamp_box: VBoxContainer
+var banner: Control
+var banner_box: VBoxContainer
 # Bidding
 var bid_panel: PanelContainer
 var ring: Control
@@ -43,12 +44,7 @@ var status_label: Label
 var strip: HBoxContainer
 var nav_btns := {}
 # Sheet (full-screen overlay for squads, teams and the log)
-var sheet: Control
-var sheet_kind := ""
-var sheet_back := ""
-var sheet_body: VBoxContainer
-var sheet_title: Label
-var sheet_back_btn: Button
+var sheet: Sheet
 
 var _lot_key := ""
 var _phase := ""
@@ -59,6 +55,7 @@ var _last_bidder := ""
 var _last_tick := -1
 var _going_said := ""
 var _prompt := ""
+var _banner_key := ""
 
 
 func _ready() -> void:
@@ -84,6 +81,11 @@ func _build_header() -> void:
 	lot_label = UI.display("", 22, UI.TEXT)
 	hv.add_child(set_label)
 	hv.add_child(lot_label)
+	# Tap the set name to see every player in this set.
+	hv.mouse_filter = Control.MOUSE_FILTER_STOP
+	hv.gui_input.connect(func(e):
+		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and not e.pressed:
+			_open_sheet("set"))
 	head.add_child(hv)
 	head.add_child(UI.theme_button())
 	head.add_child(UI.sound_button())
@@ -181,6 +183,21 @@ func _build_card() -> void:
 	stamp_box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	stamp.add_child(stamp_box)
 	card.add_child(stamp)
+	# "Now we have the ... set" banner, shown on the first lot of each set.
+	banner = Control.new()
+	banner.visible = false
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var bbg := Panel.new()
+	bbg.add_theme_stylebox_override("panel", UI.glow(UI.box(UI.BG, 20, 10, UI.GOLD, 2), Color(UI.GOLD, 0.3), 12))
+	bbg.add_child(_full(UI.box(Color(UI.GOLD, 0.1), 20, 10)))
+	bbg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.add_child(bbg)
+	banner_box = UI.vbox(2)
+	banner_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	banner_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	banner.add_child(banner_box)
+	card.add_child(banner)
 	add_child(card)
 
 
@@ -240,14 +257,14 @@ func _build_strip() -> void:
 	cv.add_child(UI.caption("Franchises", UI.MUTED, 10))
 	cv.add_child(UI.caption("Tap a team to see its squad", UI.DIM, 9))
 	cap.add_child(cv)
-	for pair in [["teams", "ALL TEAMS"], ["log", "SOLD LOG"]]:
+	for pair in [["set", "THIS SET"], ["teams", "ALL TEAMS"], ["log", "SOLD LOG"]]:
 		var key: String = pair[0]
 		var b := UI.small_button(pair[1], func(): _open_sheet(key))
 		b.custom_minimum_size = Vector2(0, 32)
 		nav_btns[key] = b
 		cap.add_child(b)
 	add_child(cap)
-	var sc := ScrollContainer.new()
+	var sc := TouchScroll.new()
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	sc.custom_minimum_size.y = 94
 	strip = UI.hbox(8)
@@ -296,7 +313,7 @@ func _process(_dt: float) -> void:
 	_fit_tap_panels()
 	var a := s.auction()
 	var left := maxi(0, int(a.get("ends", 0)) - s.now_ms())
-	var total := float(Auction.timer_ms(s.state))
+	var total := float(Auction.timer_ms(s.state) + (int(a.get("intro", 0)) if int(a.get("n", 0)) == 0 else 0))
 	if a.get("phase", "") != "bidding":
 		ring.fraction = 0.0
 		ring.text = ""
@@ -345,7 +362,12 @@ func _refresh() -> void:
 	if p.is_empty():
 		return
 	var lots: Array = a.get("lots", [])
-	set_label.text = Auction.set_label(Auction.lot_set(s.state)).to_upper()
+	var in_set := Auction.set_players(s.state)
+	var done := 0
+	for e in in_set:
+		if e["status"] == "sold" or e["status"] == "unsold":
+			done += 1
+	set_label.text = "%s  •  %d/%d  ›" % [Auction.set_label(Auction.lot_set(s.state)).to_upper(), mini(done + 1, in_set.size()), in_set.size()]
 	lot_label.text = "LOT %d / %d%s" % [int(a.get("idx", 0)) + 1, lots.size(),
 		"  •  ROUND 2" if int(a.get("round", 1)) == 2 else ""]
 	var key := "%s|%s|%s" % [pid, str(a.get("round", 1)), str(a.get("idx", 0))]
@@ -356,13 +378,18 @@ func _refresh() -> void:
 		status_label.text = ""
 		_last_n = -1
 		_last_bidder = ""
-		_announce_open(p)
+		var new_set := Auction.set_starts(s.state) and int(a.get("n", 0)) == 0 and not s.fast_forwarding()
+		if new_set:
+			_show_banner(Auction.lot_set(s.state), in_set.size())
+		_announce_open(p, Auction.lot_set(s.state) if new_set else "")
 		card.pivot_offset = card.size / 2.0
 		card.modulate.a = 0.0
 		var tw := create_tween()
 		tw.tween_property(card, "modulate:a", 1.0, 0.25)
 
 	var bidder: String = a.get("bidder", "")
+	if (bidder != "" or key != _banner_key) and banner.visible:
+		_hide_banner(_banner_key)
 	var amount := int(a.get("bid", 0))
 	var n := int(a.get("n", 0))
 	var my := s.my_team()
@@ -432,12 +459,13 @@ func _refresh() -> void:
 		_prompt = "WHO'LL OPEN AT %s?" % DB.fmt_price(next)
 	_refresh_my_team(t)
 	_refresh_strip(bidder)
-	var sig := "%d|%d|%s" % [s.state.get("log", {}).size(), Rules.squad_count(t), sheet_kind]
+	var open := sheet != null and is_instance_valid(sheet)
+	var sig := "%d|%d|%s|%s" % [s.state.get("log", {}).size(), Rules.squad_count(t), sheet.top_title() if open else "", _lot_key + phase]
 	if sig != _list_sig:
 		_list_sig = sig
 		nav_btns["log"].text = "SOLD LOG (%d)" % s.state.get("log", {}).size()
-		if sheet != null:
-			_fill_sheet()
+		if open:
+			sheet.refresh()
 
 
 func _refresh_my_team(t: Dictionary) -> void:
@@ -491,19 +519,84 @@ func _show_player(p: Dictionary) -> void:
 
 # ------------------------------------------------------------------ auctioneer
 
-func _announce_open(p: Dictionary) -> void:
+func _announce_open(p: Dictionary, new_set := "") -> void:
 	var base := int(p["base"])
 	var line := "open_%d" % base
 	var txt := Sfx.line_text(line)
 	if txt == "":
 		txt = "Next up, base price %s. Who'll open the bidding?" % DB.fmt_price(base)
+	var key := _lot_key
+	if new_set != "":
+		# A new set: "Now we have the capped batters!", then the first lot.
+		var sl := "set_" + new_set.to_lower()
+		var stxt := Sfx.line_text(sl)
+		if stxt == "":
+			stxt = "Now we have the %s!" % Auction.set_label(new_set).to_lower()
+		say_label.text = "“%s”" % stxt
+		# Let the previous SOLD call finish first (up to ~1.5 s).
+		var waited := 0.0
+		while Sfx.talking() and waited < 1.5:
+			await get_tree().create_timer(0.1).timeout
+			waited += 0.1
+			if not is_instance_valid(self) or _lot_key != key:
+				return
+		Sfx.say(sl, true)
+		await get_tree().create_timer(maxf(0.4, Sfx.line_ms(sl) / 1000.0 - 0.3)).timeout
+		if not is_instance_valid(self) or _lot_key != key:
+			return
+		if Game.store.auction().get("bidder", "") == "":
+			say_label.text = "“%s”" % txt
+			Sfx.say(line)
+		return
 	say_label.text = "“%s”" % txt
 	# Let the SOLD call finish before the next lot is introduced.
-	var key := _lot_key
 	get_tree().create_timer(0.4).timeout.connect(func():
 		# Skip the intro if someone already opened the bidding in the meantime.
 		if is_instance_valid(self) and _lot_key == key and Game.store.auction().get("bidder", "") == "":
 			Sfx.say(line))
+
+
+## Big "NOW WE HAVE THE CAPPED BATTERS" card over the player while the set is announced.
+func _show_banner(set_id: String, count: int) -> void:
+	UI.clear(banner_box)
+	var is_accel := set_id == "ACCEL"
+	var top := "End of round one" if is_accel else ("Let the auction begin" if set_id == "MARQUEE" else "Now we have the")
+	banner_box.add_child(UI.center(UI.caption(top, UI.TEXT, 12)))
+	var t := UI.display(Auction.set_label(set_id).to_upper(), 40, UI.GOLD)
+	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	t.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	banner_box.add_child(t)
+	var sub := ("%d unsold players get one more chance" % count) if is_accel else ("%d players in this set" % count)
+	banner_box.add_child(UI.center(UI.label(sub, 14, UI.TEXT, true)))
+	banner_box.add_child(UI.center(UI.caption("Tap the set name above to see them all", UI.MUTED, 9)))
+	var key := _lot_key
+	_banner_key = key
+	banner.visible = true
+	banner.modulate.a = 0.0
+	banner_box.pivot_offset = card.size / 2.0
+	banner_box.scale = Vector2(0.85, 0.85)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(banner, "modulate:a", 1.0, 0.2)
+	tw.tween_property(banner_box, "scale", Vector2.ONE, 0.35).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	var hold := clampi(Sfx.line_ms("set_" + set_id.to_lower()), 2500, 8000) / 1000.0
+	get_tree().create_timer(hold).timeout.connect(func(): _hide_banner(key))
+
+
+func _full(st: StyleBox) -> Panel:
+	var pn := Panel.new()
+	pn.add_theme_stylebox_override("panel", st)
+	pn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	pn.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return pn
+
+
+func _hide_banner(key: String) -> void:
+	if not is_instance_valid(self) or _banner_key != key or not banner.visible:
+		return
+	_banner_key = ""
+	var tw := create_tween()
+	tw.tween_property(banner, "modulate:a", 0.0, 0.25)
+	tw.tween_callback(func(): banner.visible = false)
 
 
 func _announce_bid(amount: int, next: int, interrupt := false) -> void:
@@ -592,277 +685,90 @@ func _refresh_strip(leader: String) -> void:
 
 ## Opens a full-screen sheet: "team:<id>", "teams" or "log".
 func _open_sheet(kind: String) -> void:
-	if sheet == null:
-		_build_sheet()
-	sheet_back = "teams" if sheet_kind == "teams" and kind.begins_with("team:") else ""
-	sheet_kind = kind
+	if sheet != null and is_instance_valid(sheet):
+		sheet.close()
 	_list_sig = ""
-	_fill_sheet()
-
-
-func _close_sheet() -> void:
-	if sheet == null:
-		return
-	if sheet_back != "":
-		var back := sheet_back
-		sheet_back = ""
-		sheet_kind = back
-		_fill_sheet()
-		return
-	var sh := sheet
-	sheet = null
-	sheet_kind = ""
-	var tw := sh.create_tween()
-	tw.tween_property(sh, "modulate:a", 0.0, 0.15)
-	tw.tween_callback(sh.queue_free)
-
-
-func _build_sheet() -> void:
-	sheet = Control.new()
-	sheet.top_level = true
-	sheet.z_index = 50
-	var vp := get_viewport_rect().size
-	sheet.position = Vector2.ZERO
-	sheet.size = vp
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.55)
-	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dim.gui_input.connect(func(e):
-		if e is InputEventMouseButton and e.pressed:
-			sheet_back = ""
-			_close_sheet())
-	sheet.add_child(dim)
-	var w := minf(vp.x, 600.0)
-	var panel := PanelContainer.new()
-	var st := UI.box(Color(UI.BG, 0.98), 24, 16, UI.LINE)
-	st.corner_radius_bottom_left = 0
-	st.corner_radius_bottom_right = 0
-	panel.add_theme_stylebox_override("panel", st)
-	panel.position = Vector2((vp.x - w) / 2.0, vp.y * 0.08)
-	panel.size = Vector2(w, vp.y * 0.92)
-	var v := UI.vbox(10)
-	panel.add_child(v)
-	var head := UI.hbox(8)
-	sheet_back_btn = UI.button("◀", func(): _close_sheet(), "icon")
-	head.add_child(sheet_back_btn)
-	sheet_title = UI.display("", 28, UI.TEXT)
-	sheet_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	head.add_child(sheet_title)
-	head.add_child(UI.button("✕", func():
-		sheet_back = ""
-		_close_sheet(), "icon"))
-	v.add_child(head)
-	sheet_body = UI.vbox(8)
-	var sc := UI.scroll(sheet_body)
-	v.add_child(sc)
-	sheet.add_child(panel)
-	add_child(sheet)
-	panel.position.y += 40
-	sheet.modulate.a = 0.0
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(sheet, "modulate:a", 1.0, 0.15)
-	tw.tween_property(panel, "position:y", vp.y * 0.08, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-
-
-func _fill_sheet() -> void:
-	if sheet == null:
-		return
-	UI.clear(sheet_body)
-	sheet_back_btn.visible = sheet_back != ""
-	if sheet_kind.begins_with("team:"):
-		var tid := sheet_kind.substr(5)
-		sheet_title.text = "YOUR SQUAD" if tid == Game.store.my_team() else DB.team(tid).get("name", "").to_upper()
-		_fill_team(tid)
-	elif sheet_kind == "teams":
-		sheet_title.text = "ALL FRANCHISES"
-		_fill_teams()
+	if kind.begins_with("team:"):
+		var tid := kind.substr(5)
+		sheet = Sheet.open(self, _team_title(tid), func(body, _sh): Views.team_page(body, tid))
+	elif kind == "teams":
+		sheet = Sheet.open(self, "ALL FRANCHISES", _fill_teams)
+	elif kind == "set":
+		sheet = Sheet.open(self, "THIS SET", _fill_set)
 	else:
-		sheet_title.text = "SOLD LOG"
-		_fill_log()
+		sheet = Sheet.open(self, "SOLD LOG", _fill_log)
 
 
-func _fill_team(tid: String) -> void:
+func _team_title(tid: String) -> String:
+	return "YOUR SQUAD" if tid == Game.store.my_team() else DB.team(tid).get("name", "").to_upper()
+
+
+func _fill_teams(body: VBoxContainer, sh: Sheet) -> void:
+	Views.teams_list(body, func(tid): sh.push(_team_title(tid), func(b, _s): Views.team_page(b, tid)))
+
+
+## Every player in the current set: on the block, still to come, sold, unsold.
+func _fill_set(body: VBoxContainer, _sh: Sheet) -> void:
 	var s := Game.store
-	var t := s.team(tid)
-	var squad: Dictionary = t.get("squad", {})
-	var purse := int(t.get("purse", 0))
-	# Hero: crest, name, owner.
-	var hero := UI.panel(UI.shade(UI.team_color(tid), 0.55, 0.85), 18, 14, Color(UI.team_accent(tid), 0.5))
-	var hv := UI.vbox(10)
+	var set_id := Auction.lot_set(s.state)
+	var all := Auction.set_players(s.state)
+	var groups := {"live": [], "next": [], "sold": [], "unsold": []}
+	for e in all:
+		groups[e["status"]].append(e)
+	var hero := UI.panel(Color(UI.GOLD, 0.1), 16, 12, Color(UI.GOLD, 0.5))
+	var hv := UI.vbox(6)
 	hero.add_child(hv)
-	var top := UI.hbox(12)
-	top.add_child(UI.crest(tid, 60))
-	var nv := UI.vbox(0)
-	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	nv.add_child(UI.wrap(UI.display(DB.team(tid).get("name", ""), 26, UI.TEXT)))
-	var who := "You" if tid == s.my_team() else ("AI franchise" if t.get("ai", false) else s.team_owner_name(tid))
-	nv.add_child(UI.caption(who, UI.GOLD, 10))
-	top.add_child(nv)
-	hv.add_child(top)
-	var grid := GridContainer.new()
-	grid.columns = 3
-	grid.add_theme_constant_override("h_separation", 10)
-	grid.add_theme_constant_override("v_separation", 8)
-	var spent := Rules.PURSE - purse
-	var xi_txt := "—"
-	if squad.size() >= 11:
-		var xi := XI.best_xi(squad.keys())
-		var tot := 0
-		for pid in xi:
-			tot += int(DB.player(pid)["ovr"])
-		xi_txt = str(roundi(float(tot) / maxf(1.0, xi.size())))
-	for pair in [["Purse left", DB.fmt_price(purse), UI.GOLD], ["Spent", DB.fmt_price(spent), UI.TEXT],
-			["Max bid", DB.fmt_price(maxi(0, Rules.max_affordable(t))), UI.TEXT],
-			["Squad", "%d/%d" % [squad.size(), Rules.MAX_SQUAD], UI.GREEN if squad.size() >= Rules.MIN_SQUAD else UI.TEXT],
-			["Overseas", "%d/%d" % [Rules.overseas_count(t), Rules.MAX_OVERSEAS], UI.TEXT],
-			["XI avg OVR", xi_txt, UI.TEXT]]:
-		var cv := UI.vbox(-4)
-		cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cv.add_child(UI.caption(pair[0], UI.MUTED, 9))
-		cv.add_child(UI.display(pair[1], 24, pair[2]))
-		grid.add_child(cv)
-	hv.add_child(grid)
-	var bar := _purse_bar()
-	bar.value = purse
-	hv.add_child(bar)
-	var need_note := Rules.MIN_SQUAD - squad.size()
-	if need_note > 0:
-		hv.add_child(UI.label("Needs %d more player%s to reach the minimum of %d." % [need_note, "" if need_note == 1 else "s", Rules.MIN_SQUAD], 12, UI.MUTED))
-	sheet_body.add_child(hero)
-	# Role balance.
-	sheet_body.add_child(UI.caption("Role balance (have / ideal)", UI.MUTED, 10))
-	var counts := AI.role_counts(t)
-	var needs := HFlowContainer.new()
-	needs.add_theme_constant_override("h_separation", 6)
-	needs.add_theme_constant_override("v_separation", 6)
-	for r in ["WK", "BAT", "AR", "PACE", "SPIN"]:
-		needs.add_child(_need_chip(r, counts[r], AI.TARGET[r], 12))
-	sheet_body.add_child(needs)
-	# Squad grouped by role.
-	if squad.is_empty():
-		sheet_body.add_child(UI.spacer(10, 0))
-		sheet_body.add_child(UI.center(UI.label("No players bought yet.", 15, UI.MUTED)))
-		return
-	for role in ["WK", "BAT", "AR", "PACE", "SPIN"]:
-		var ids := []
-		for pid in squad:
-			if DB.player(pid)["role"] == role:
-				ids.append(pid)
-		if ids.is_empty():
-			continue
-		ids.sort_custom(func(x, y): return int(squad[x]) > int(squad[y]))
-		var sub := 0
-		for pid in ids:
-			sub += int(squad[pid])
-		var hrow := UI.hbox(6)
-		var hc := UI.caption("%s (%d)" % [ROLE_TITLES[role], ids.size()], UI.GOLD, 11)
-		hc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		hrow.add_child(hc)
-		hrow.add_child(UI.caption(DB.fmt_price(sub), UI.MUTED, 10))
-		sheet_body.add_child(UI.spacer(4, 0))
-		sheet_body.add_child(hrow)
-		for pid in ids:
-			sheet_body.add_child(_player_row(pid, int(squad[pid])))
+	hv.add_child(UI.display(Auction.set_label(set_id).to_upper(), 28, UI.GOLD))
+	var stats := UI.hbox(8)
+	for pair in [["PLAYERS", all.size(), UI.TEXT], ["SOLD", groups["sold"].size(), UI.GREEN],
+			["UNSOLD", groups["unsold"].size(), UI.RED], ["TO COME", groups["next"].size() + groups["live"].size(), UI.TEXT]]:
+		var sv := UI.vbox(-4)
+		sv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		sv.add_child(UI.center(UI.caption(pair[0], UI.DIM, 9)))
+		sv.add_child(UI.center(UI.display(str(pair[1]), 24, pair[2])))
+		stats.add_child(sv)
+	hv.add_child(stats)
+	var spent := 0
+	for e in groups["sold"]:
+		spent += int(e["price"])
+	if spent > 0:
+		hv.add_child(UI.caption("Spent in this set: %s" % DB.fmt_price(spent), UI.MUTED, 10))
+	body.add_child(hero)
+	if not groups["live"].is_empty():
+		body.add_child(Views.section("ON THE BLOCK"))
+		for e in groups["live"]:
+			body.add_child(Views.player_row(e["pid"], -1, "", {"tag": ["LIVE", UI.GOLD]}))
+	if not groups["next"].is_empty():
+		body.add_child(Views.section("COMING UP", "in auction order"))
+		var i := 1
+		for e in groups["next"]:
+			var p := DB.player(e["pid"])
+			body.add_child(Views.player_row(e["pid"], -1, "", {"num": i, "tag": [DB.fmt_price(int(p["base"])), UI.MUTED],
+				"line": "%s  •  BAT %d  •  BOWL %d  •  base price" % [DB.role_label(p["role"]), p["bat"], p["bowl"]]}))
+			i += 1
+	if not groups["sold"].is_empty():
+		body.add_child(Views.section("SOLD", str(groups["sold"].size())))
+		var sold: Array = groups["sold"].duplicate()
+		sold.reverse()
+		for e in sold:
+			body.add_child(Views.player_row(e["pid"], int(e["price"]), e["team"]))
+	if not groups["unsold"].is_empty():
+		body.add_child(Views.section("UNSOLD", str(groups["unsold"].size())))
+		for e in groups["unsold"]:
+			body.add_child(Views.player_row(e["pid"], 0))
 
 
-func _fill_teams() -> void:
-	var s := Game.store
-	var teams: Dictionary = s.state.get("teams", {})
-	var ids := []
-	for tid in DB.team_ids():
-		if teams.has(tid):
-			ids.append(tid)
-	# Richest first: who can still splash out?
-	ids.sort_custom(func(a, b): return int(teams[a].get("purse", 0)) > int(teams[b].get("purse", 0)))
-	for tid in ids:
-		var t: Dictionary = teams[tid]
-		var is_me: bool = tid == s.my_team()
-		var st := UI.box(UI.shade(UI.team_color(tid), 0.6, 0.7), 16, 12, UI.GREEN if is_me else Color(UI.team_accent(tid), 0.35), 2 if is_me else 1)
-		var b := _tap_panel(st, func(): _open_sheet("team:" + tid))
-		var v := UI.vbox(6)
-		var h := UI.hbox(10)
-		h.add_child(UI.crest(tid, 40))
-		var nv := UI.vbox(-2)
-		nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var nl := UI.label(DB.team(tid)["name"], 15, UI.TEXT, true)
-		nl.clip_text = true
-		nv.add_child(nl)
-		var who := "YOU" if is_me else ("AI" if t.get("ai", false) else s.team_owner_name(tid))
-		nv.add_child(UI.caption("%s  •  %d player%s  •  %d/%d overseas" % [who, Rules.squad_count(t), "" if Rules.squad_count(t) == 1 else "s", Rules.overseas_count(t), Rules.MAX_OVERSEAS], UI.MUTED, 9))
-		h.add_child(nv)
-		var pv := UI.vbox(-4)
-		pv.add_child(UI.caption("Purse", UI.DIM, 9))
-		pv.add_child(UI.display(DB.fmt_price(int(t.get("purse", 0))), 24, UI.GOLD))
-		h.add_child(pv)
-		v.add_child(h)
-		var bar := _purse_bar()
-		bar.value = int(t.get("purse", 0))
-		v.add_child(bar)
-		var sq: Dictionary = t.get("squad", {})
-		if not sq.is_empty():
-			var top_ids: Array = sq.keys()
-			top_ids.sort_custom(func(x, y): return int(sq[x]) > int(sq[y]))
-			var names := []
-			for pid in top_ids.slice(0, 3):
-				names.append("%s %s" % [DB.player(pid)["name"], DB.fmt_price(int(sq[pid]))])
-			v.add_child(UI.wrap(UI.label("Top buys: " + ", ".join(names), 12, UI.MUTED)))
-		UI.ignore_mouse(v)
-		b.add_child(v)
-		sheet_body.add_child(b)
-	_fit_sheet_buttons()
-
-
-## Size tap panels inside the sheet to their content (Buttons don't do it).
-func _fit_sheet_buttons() -> void:
-	await get_tree().process_frame
-	if sheet == null:
-		return
-	for b in sheet_body.get_children():
-		if b is Button and b.get_child_count() > 0:
-			var inner: Control = b.get_child(0)
-			var st: StyleBox = b.get_theme_stylebox("normal")
-			b.custom_minimum_size.y = inner.get_combined_minimum_size().y + st.get_margin(SIDE_TOP) + st.get_margin(SIDE_BOTTOM)
-			inner.position = Vector2(st.get_margin(SIDE_LEFT), st.get_margin(SIDE_TOP))
-			inner.size = Vector2(b.size.x - st.get_margin(SIDE_LEFT) - st.get_margin(SIDE_RIGHT), inner.get_combined_minimum_size().y)
-
-
-func _fill_log() -> void:
-	var s := Game.store
-	var log: Dictionary = s.state.get("log", {})
+func _fill_log(body: VBoxContainer, _sh: Sheet) -> void:
+	var log: Dictionary = Game.store.state.get("log", {})
 	var keys: Array = log.keys()
 	keys.sort()
 	keys.reverse()
 	if keys.is_empty():
-		sheet_body.add_child(UI.center(UI.label("Nothing sold yet.", 15, UI.MUTED)))
+		body.add_child(UI.center(UI.label("Nothing sold yet.", 15, UI.MUTED)))
 		return
 	for k in keys.slice(0, 120):
 		var e: Dictionary = log[k]
-		sheet_body.add_child(_player_row(e["pid"], int(e.get("price", 0)), e.get("team", "")))
-
-
-func _player_row(pid: String, price: int, tid := "") -> Control:
-	var p := DB.player(pid)
-	var row := PanelContainer.new()
-	row.add_theme_stylebox_override("panel", UI.box(UI.ink(0.04), 12, 10))
-	var h := UI.hbox(10)
-	row.add_child(h)
-	if tid != "":
-		h.add_child(UI.crest(tid, 28))
-	h.add_child(UI.role_icon(p["role"], 28))
-	var nv := UI.vbox(-2)
-	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var n := UI.label(p["name"] + ("  ✈" if p["overseas"] else ""), 14, UI.TEXT, true)
-	n.clip_text = true
-	nv.add_child(n)
-	nv.add_child(UI.caption("%s  •  BAT %d  •  BOWL %d" % [DB.role_label(p["role"]), p["bat"], p["bowl"]], UI.DIM, 9))
-	h.add_child(nv)
-	var ov := UI.display(str(p["ovr"]), 22, UI.MUTED)
-	h.add_child(ov)
-	var pr := UI.display(DB.fmt_price(price) if price > 0 else "UNSOLD", 20, UI.GOLD if price > 0 else UI.RED)
-	pr.custom_minimum_size.x = 84
-	pr.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	h.add_child(pr)
-	return row
+		body.add_child(Views.player_row(e["pid"], int(e.get("price", 0)), e.get("team", "")))
 
 
 # ------------------------------------------------------------------ actions

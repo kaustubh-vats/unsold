@@ -65,5 +65,15 @@
 "open_75": "Next up, base price seventy-five lakh. Who'll open the bidding?",
 "open_100": "Next up, base price one crore. Who'll open the bidding?",
 "open_150": "Next up, base price one crore fifty. Who'll open the bidding?",
-"open_200": "Next up, base price two crore. Who'll open the bidding?"
+"open_200": "Next up, base price two crore. Who'll open the bidding?",
+"set_marquee": "Ladies and gentlemen, welcome! We begin with the marquee set, the biggest names in the game!",
+"set_bat": "That's the marquee set done. Next up, the capped batters!",
+"set_wk": "Moving on to the capped wicket-keepers!",
+"set_ar": "Now we have the capped all-rounders!",
+"set_pace": "Next, the capped fast bowlers. Get your paddles ready!",
+"set_spin": "Now we have the capped spinners!",
+"set_u-bat": "On to the uncapped batters. Time to find the next big star!",
+"set_u-ar": "Next, the uncapped all-rounders!",
+"set_u-bowl": "And now, the uncapped bowlers!",
+"set_accel": "That's the end of round one. Welcome to the accelerated round!"
 }
