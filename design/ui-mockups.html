@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unsold UI Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;800&family=Oswald:wght@500;700&family=Space+Grotesk:wght@400;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,900&family=IBM+Plex+Mono:wght@400;600&family=Archivo+Black&family=Nunito:wght@600;800;900&family=Sora:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --page: #0b0d12; --page-ink: #e8eaf0; --page-muted: #8b91a3; --page-line: #222633;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --page: #f3f2ee; --page-ink: #17181c; --page-muted: #5d6170; --page-line: #d9d7cf; }
+}
+:root[data-theme="light"] { --page: #f3f2ee; --page-ink: #17181c; --page-muted: #5d6170; --page-line: #d9d7cf; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--page); color: var(--page-ink); font-family: Inter, system-ui, sans-serif; padding: 32px 16px 80px; }
+.intro { max-width: 1180px; margin: 0 auto 28px; }
+.intro h1 { font-family: "Bebas Neue", sans-serif; font-size: 56px; letter-spacing: 1px; line-height: 1; }
+.intro p { color: var(--page-muted); max-width: 720px; margin-top: 10px; line-height: 1.5; }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+nav.jump a { color: var(--page-ink); text-decoration: none; border: 1px solid var(--page-line); padding: 6px 12px; border-radius: 99px; font-size: 13px; font-weight: 600; }
+nav.jump a:hover { border-color: var(--page-ink); }
+section.dir { max-width: 1180px; margin: 0 auto 64px; border-top: 1px solid var(--page-line); padding-top: 28px; }
+.dir-head { display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; margin-bottom: 6px; }
+.dir-head .tag { font-family: "Bebas Neue"; font-size: 64px; line-height: .9; color: var(--page-muted); }
+.dir-head h2 { font-family: "Bebas Neue"; font-size: 40px; letter-spacing: .5px; }
+.dir-desc { color: var(--page-muted); max-width: 780px; line-height: 1.5; margin-bottom: 8px; }
+.traits { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.traits span { font-size: 12px; border: 1px solid var(--page-line); border-radius: 6px; padding: 3px 8px; color: var(--page-muted); }
+.phones { display: flex; flex-wrap: wrap; gap: 28px; }
+.phone-wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.phone-wrap .cap { font-size: 12px; color: var(--page-muted); letter-spacing: 1px; text-transform: uppercase; }
+.phone { width: 360px; max-width: calc(100vw - 32px); height: 800px; border-radius: 40px; padding: 10px; background: #000; box-shadow: 0 30px 60px -20px rgba(0,0,0,.5), 0 0 0 1px #333 inset; }
+.screen { width: 100%; height: 100%; border-radius: 31px; overflow: hidden; position: relative; display: flex; flex-direction: column; gap: 8px; padding: 18px 14px 14px; }
+.row { display: flex; align-items: center; gap: 8px; }
+.grow { flex: 1; min-width: 0; }
+.crest { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 10px; font-weight: 800; color: #fff; flex: none; }
+.ell { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- shared screen structure ---------- */
+.top .set { font-size: 10px; letter-spacing: 1.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .lot { font-size: 22px; }
+.ib { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; flex: none; }
+.my { padding: 10px 12px; }
+.my .stats { display: flex; justify-content: space-between; margin-top: 4px; }
+.my .stats div { text-align: center; }
+.my .k { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .65; }
+.my .v { font-size: 18px; }
+.my .purse .v { font-size: 26px; }
+.bar { height: 5px; border-radius: 9px; margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 70%; }
+.card { padding: 14px; position: relative; }
+.card .meta { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; opacity: .7; }
+.card .name { font-size: 34px; line-height: 1; margin: 2px 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .ovr { font-size: 48px; line-height: .9; text-align: center; }
+.card .ovr small { display: block; font-size: 10px; letter-spacing: 2px; }
+.chips { display: flex; gap: 5px; flex-wrap: wrap; }
+.chip { font-size: 9px; letter-spacing: 1px; font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; }
+.stat { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 1px; margin-top: 8px; }
+.stat .t { flex: 1; height: 6px; border-radius: 9px; overflow: hidden; }
+.stat .t i { display: block; height: 100%; }
+.bid { padding: 12px 14px; display: flex; gap: 14px; align-items: center; }
+.ring { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; flex: none; }
+.bid .lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; opacity: .7; }
+.bid .amt { font-size: 38px; line-height: 1; }
+.bid .by { font-size: 13px; font-weight: 700; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+.bid .by .crest { width: 20px; height: 20px; font-size: 7px; }
+.bid .say { font-size: 11px; opacity: .7; margin-top: 4px; font-style: italic; }
+.call { text-align: center; font-size: 16px; letter-spacing: .5px; }
+.acts { display: flex; gap: 8px; }
+.btn { height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 20px; letter-spacing: .5px; flex: 1; }
+.btn.main { flex: 2.2; }
+.btn.ff { flex: .7; }
+.strip { display: flex; gap: 6px; overflow: hidden; margin-top: auto; }
+.tm { width: 62px; flex: none; padding: 8px 4px; text-align: center; border-radius: 12px; }
+.tm .crest { margin: 0 auto 4px; width: 26px; height: 26px; font-size: 8px; }
+.tm b { display: block; font-size: 13px; }
+.tm small { font-size: 8px; letter-spacing: 1px; opacity: .6; }
+
+.champ { padding: 14px; display: flex; gap: 12px; align-items: center; }
+.champ .crest { width: 64px; height: 64px; font-size: 16px; }
+.champ .k { font-size: 10px; letter-spacing: 2px; }
+.champ .n { font-size: 28px; line-height: 1; }
+.verdict { padding: 10px 12px; }
+.verdict .t { font-size: 24px; }
+.verdict p { font-size: 11px; opacity: .75; margin-top: 2px; }
+.tabs { display: flex; gap: 4px; font-size: 13px; font-weight: 600; overflow: hidden; }
+.tabs span { padding: 7px 10px; border-radius: 9px; white-space: nowrap; }
+.tbl { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; }
+.tr { display: grid; grid-template-columns: 20px 26px 1fr 24px 24px 24px 32px; gap: 6px; align-items: center; padding: 6px 8px; border-radius: 10px; font-size: 13px; }
+.tr .crest { width: 24px; height: 24px; font-size: 7px; }
+.tr .r { text-align: right; }
+.tr.h { font-size: 9px; letter-spacing: 1.5px; opacity: .6; padding-top: 0; padding-bottom: 0; }
+.foot { display: flex; gap: 8px; }
+.foot .btn { height: 48px; font-size: 17px; }
+
+/* =========== A · PRIME TIME (refined current look) =========== */
+.A .screen { background: radial-gradient(120% 60% at 50% 0%, #1c2440 0%, #0c0f1a 60%); color: #eef0f6; font-family: Inter; }
+.A .disp, .A .lot, .A .name, .A .ovr, .A .amt, .A .btn, .A .call, .A .v, .A .n, .A .t, .A .tm b, .A .ring { font-family: "Bebas Neue"; letter-spacing: .5px; }
+.A .set, .A .ovr, .A .purse .v, .A .call { color: #ffc53d; }
+.A .ib { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+.A .my { background: linear-gradient(135deg, #0f4f4a, #0c3a3a); border: 1px solid rgba(78,205,196,.35); border-radius: 18px; }
+.A .bar { background: rgba(255,255,255,.1); } .A .bar i { background: #ffc53d; }
+.A .card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,197,61,.3); border-radius: 20px; box-shadow: 0 0 0 1px rgba(255,197,61,.1), 0 12px 30px rgba(0,0,0,.4); }
+.A .card.wish { border: 2px solid #ffc53d; background: rgba(255,197,61,.08); box-shadow: 0 0 24px rgba(255,197,61,.25); }
+.A .chip.w { background: rgba(255,197,61,.2); color: #ffc53d; } .A .chip.o { background: rgba(96,140,255,.2); color: #9db6ff; } .A .chip.tr8 { background: rgba(255,255,255,.08); color: #cfd3df; }
+.A .stat .t { background: rgba(255,255,255,.08); }
+.A .bid { background: linear-gradient(135deg, #12335c, #0f2342); border: 2px solid #4f8cff; border-radius: 20px; box-shadow: 0 0 20px rgba(79,140,255,.25); }
+.A .ring { border: 6px solid #2ecc8f; border-right-color: rgba(255,255,255,.1); }
+.A .btn.main { background: #ffc53d; color: #1a1300; box-shadow: 0 6px 20px rgba(255,197,61,.35); }
+.A .btn { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); color: #aab0c0; }
+.A .tm { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+.A .tm.me { border: 2px solid #2ecc8f; } .A .tm.lead { border: 2px solid #ffc53d; background: rgba(255,197,61,.1); }
+.A .champ { background: linear-gradient(135deg, #234e6e, #183650); border: 2px solid #ffc53d; border-radius: 20px; }
+.A .champ .k { color: #ffc53d; }
+.A .verdict { background: rgba(255,197,61,.08); border: 1px solid rgba(255,197,61,.4); border-radius: 16px; } .A .verdict .t { color: #ffc53d; }
+.A .tabs span.on { background: rgba(255,255,255,.07); color: #ffc53d; } .A .tabs span { color: #9aa1b5; }
+.A .tr { background: rgba(255,255,255,.035); } .A .tr.me { background: rgba(255,197,61,.1); outline: 1px solid rgba(255,197,61,.5); }
+.A .tr .pts { color: #ffc53d; font-family: "Bebas Neue"; font-size: 18px; } .A .tr .pos.q { color: #2ecc8f; }
+.A .tr.h { background: none; }
+
+/* =========== B · FLOODLIGHTS (stadium night, neon) =========== */
+.B .screen { background: #050607; color: #f2f5f0; font-family: "Space Grotesk"; background-image: radial-gradient(60% 30% at 15% 0%, rgba(200,255,0,.12), transparent 70%), radial-gradient(60% 30% at 85% 0%, rgba(0,229,255,.12), transparent 70%); }
+.B .lot, .B .name, .B .ovr, .B .amt, .B .btn, .B .call, .B .v, .B .n, .B .t, .B .tm b, .B .ring { font-family: Oswald; text-transform: uppercase; }
+.B .set { color: #c8ff00; } .B .lot { font-size: 20px; }
+.B .ib { border: 1px solid #2a2f2a; }
+.B .my { border: 1px solid #1f2420; border-radius: 4px; background: #0b0d0c; }
+.B .purse .v { color: #c8ff00; text-shadow: 0 0 12px rgba(200,255,0,.5); }
+.B .bar { background: #1a1d1a; border-radius: 0; height: 3px; } .B .bar i { background: #c8ff00; box-shadow: 0 0 10px #c8ff00; }
+.B .card { background: linear-gradient(160deg, #0f1310, #080a09); border: 1px solid #24302a; border-radius: 4px; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%); }
+.B .card.wish { border-color: #c8ff00; box-shadow: inset 0 0 0 1px #c8ff00, inset 0 0 30px rgba(200,255,0,.12); }
+.B .card .name { font-size: 30px; letter-spacing: .5px; }
+.B .ovr { color: #00e5ff; text-shadow: 0 0 16px rgba(0,229,255,.6); }
+.B .chip { border-radius: 2px; } .B .chip.w { background: #c8ff00; color: #000; } .B .chip.o { border: 1px solid #00e5ff; color: #00e5ff; } .B .chip.tr8 { border: 1px solid #3a423c; color: #a8b0aa; }
+.B .stat .t { background: #161a17; border-radius: 0; height: 4px; }
+.B .bid { background: #0b0d0c; border: 1px solid #00e5ff; border-radius: 4px; box-shadow: 0 0 24px rgba(0,229,255,.18); }
+.B .amt { color: #00e5ff; text-shadow: 0 0 14px rgba(0,229,255,.5); }
+.B .ring { border-radius: 6px; border: 2px solid #c8ff00; color: #c8ff00; font-size: 30px; box-shadow: 0 0 14px rgba(200,255,0,.35); }
+.B .call { color: #c8ff00; font-size: 15px; letter-spacing: 2px; }
+.B .btn { border-radius: 4px; border: 1px solid #2a302c; color: #9ba59e; background: #0b0d0c; }
+.B .btn.main { background: #c8ff00; color: #000; border: 0; box-shadow: 0 0 24px rgba(200,255,0,.45); font-size: 22px; }
+.B .tm { border-radius: 4px; border: 1px solid #1f2420; background: #0b0d0c; } .B .tm.me { border-color: #c8ff00; } .B .tm.lead { border-color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,.3); }
+.B .champ { border: 1px solid #c8ff00; border-radius: 4px; background: linear-gradient(90deg, rgba(200,255,0,.12), transparent); }
+.B .champ .k { color: #c8ff00; } .B .champ .n { font-size: 30px; }
+.B .verdict { border-left: 3px solid #00e5ff; background: #0b0d0c; } .B .verdict .t { color: #00e5ff; }
+.B .tabs span { color: #6d766f; text-transform: uppercase; font-size: 11px; letter-spacing: 1.5px; } .B .tabs span.on { color: #000; background: #c8ff00; border-radius: 2px; }
+.B .tr { border-radius: 2px; border-bottom: 1px solid #141814; } .B .tr.me { background: rgba(0,229,255,.08); border-left: 3px solid #00e5ff; }
+.B .tr .pts { color: #c8ff00; font-weight: 700; } .B .tr .pos.q { color: #c8ff00; }
+
+/* =========== C · SCOREBOOK (light, editorial, classic cricket) =========== */
+.C .screen { background: #f6f1e4; color: #1d1a14; font-family: "IBM Plex Mono", monospace; background-image: repeating-linear-gradient(0deg, transparent 0 27px, rgba(29,26,20,.05) 27px 28px); }
+.C .lot, .C .name, .C .n, .C .t, .C .call { font-family: Fraunces, serif; font-weight: 900; }
+.C .ovr, .C .amt, .C .v, .C .tm b, .C .ring, .C .btn { font-family: "IBM Plex Mono"; font-weight: 600; }
+.C .set { color: #b3261e; } .C .lot { font-size: 24px; }
+.C .ib { border: 1.5px solid #1d1a14; }
+.C .my { border: 1.5px solid #1d1a14; background: #fffdf6; border-radius: 2px; }
+.C .my .v { font-size: 14px; } .C .purse .v { font-size: 18px; color: #0b5d3b; }
+.C .bar { background: #e5dcc5; border-radius: 0; } .C .bar i { background: #0b5d3b; }
+.C .card { background: #fffdf6; border: 1.5px solid #1d1a14; border-radius: 2px; box-shadow: 5px 5px 0 #1d1a14; }
+.C .card.wish { box-shadow: 5px 5px 0 #b3261e; border-color: #b3261e; }
+.C .card .name { font-size: 26px; white-space: normal; }
+.C .ovr { font-size: 40px; color: #b3261e; } .C .ovr small { color: #1d1a14; }
+.C .chip { border: 1px solid currentColor; border-radius: 0; } .C .chip.w { color: #b3261e; background: #fbe3dc; } .C .chip.o, .C .chip.tr8 { color: #4a4436; }
+.C .stat .t { background: #ece4cf; border-radius: 0; } .C .stat .t i { background: #1d1a14 !important; }
+.C .bid { background: #1d1a14; color: #f6f1e4; border-radius: 2px; }
+.C .amt { font-size: 32px; color: #ffd166; }
+.C .ring { border: 2px dashed #ffd166; color: #ffd166; font-size: 22px; }
+.C .call { color: #b3261e; font-size: 17px; font-style: italic; font-weight: 600; }
+.C .btn { border: 1.5px solid #1d1a14; border-radius: 2px; background: #fffdf6; font-size: 15px; }
+.C .btn.main { background: #b3261e; color: #fff; border-color: #b3261e; box-shadow: 4px 4px 0 #1d1a14; }
+.C .tm { border: 1px solid #1d1a14; border-radius: 0; background: #fffdf6; } .C .tm.me { background: #e6f2ea; } .C .tm.lead { background: #fbe3dc; border-width: 2px; }
+.C .champ { border: 1.5px solid #1d1a14; background: #fffdf6; box-shadow: 5px 5px 0 #1d1a14; }
+.C .champ .k { color: #b3261e; } .C .champ .n { font-size: 26px; }
+.C .verdict { border-top: 2px solid #1d1a14; border-bottom: 2px solid #1d1a14; } .C .verdict .t { color: #0b5d3b; font-size: 22px; }
+.C .tabs { border-bottom: 1.5px solid #1d1a14; } .C .tabs span { border-radius: 0; font-size: 12px; } .C .tabs span.on { background: #1d1a14; color: #f6f1e4; }
+.C .tr { border-radius: 0; border-bottom: 1px dotted #9b917a; font-size: 12px; } .C .tr.me { background: #fbe3dc; }
+.C .tr .pts { font-weight: 600; color: #b3261e; } .C .tr .pos.q { color: #0b5d3b; font-weight: 600; }
+
+/* =========== D · PADDLE POP (bold, flat, playful) =========== */
+.D .screen { background: #ffe9d2; color: #1b1035; font-family: Nunito; }
+.D .lot, .D .name, .D .ovr, .D .amt, .D .btn, .D .call, .D .v, .D .n, .D .t, .D .tm b, .D .ring { font-family: "Archivo Black"; }
+.D .set { color: #ff4d6d; } .D .lot { font-size: 20px; }
+.D .ib { background: #fff; border: 3px solid #1b1035; }
+.D .my { background: #0fb39a; color: #fff; border: 3px solid #1b1035; border-radius: 22px; box-shadow: 0 5px 0 #1b1035; }
+.D .my .k { opacity: .85; }
+.D .bar { background: rgba(0,0,0,.2); height: 8px; } .D .bar i { background: #ffd23f; }
+.D .card { background: #fff; border: 3px solid #1b1035; border-radius: 26px; box-shadow: 0 6px 0 #1b1035; }
+.D .card.wish { background: #fff6d6; }
+.D .card.wish::after { content: "★"; position: absolute; top: -14px; left: -10px; width: 38px; height: 38px; border-radius: 50%; background: #ffd23f; border: 3px solid #1b1035; display: grid; place-items: center; font-size: 18px; }
+.D .card .name { font-size: 24px; white-space: normal; }
+.D .card .meta { padding-left: 22px; }
+.D .my .v { font-size: 14px; } .D .purse .v { font-size: 19px; }
+.D .ovr { color: #fff; background: #7b2ff7; border: 3px solid #1b1035; border-radius: 18px; padding: 6px 8px 4px; font-size: 36px; }
+.D .chip { border-radius: 99px; border: 2px solid #1b1035; } .D .chip.w { background: #ffd23f; } .D .chip.o { background: #9be7ff; } .D .chip.tr8 { background: #ffd0dc; }
+.D .stat .t { background: #eee6ff; height: 10px; border: 2px solid #1b1035; }
+.D .bid { background: #3d5afe; color: #fff; border: 3px solid #1b1035; border-radius: 24px; box-shadow: 0 6px 0 #1b1035; }
+.D .ring { background: #ffd23f; color: #1b1035; border: 3px solid #1b1035; font-size: 28px; }
+.D .call { color: #7b2ff7; font-size: 15px; }
+.D .btn { background: #fff; border: 3px solid #1b1035; border-radius: 18px; box-shadow: 0 5px 0 #1b1035; font-size: 17px; }
+.D .btn.main { background: #ff4d6d; color: #fff; font-size: 21px; }
+.D .tm { background: #fff; border: 3px solid #1b1035; border-radius: 16px; } .D .tm.me { background: #c6f6e9; } .D .tm.lead { background: #ffd23f; }
+.D .champ { background: #7b2ff7; color: #fff; border: 3px solid #1b1035; border-radius: 26px; box-shadow: 0 6px 0 #1b1035; }
+.D .champ .k { color: #ffd23f; }
+.D .verdict { background: #fff; border: 3px solid #1b1035; border-radius: 20px; } .D .verdict .t { color: #ff4d6d; }
+.D .tabs span { background: #fff; border: 2px solid #1b1035; border-radius: 99px; font-size: 12px; font-weight: 800; } .D .tabs span.on { background: #1b1035; color: #ffd23f; }
+.D .tr { background: #fff; border: 2px solid #1b1035; border-radius: 14px; font-weight: 800; } .D .tr.me { background: #ffd23f; }
+.D .tr .pts { color: #7b2ff7; font-family: "Archivo Black"; } .D .tr .pos.q { color: #0fb39a; }
+.D .tr.h { background: none; border: 0; }
+
+/* =========== E · GLASS ARENA (vibrant gradient, frosted glass) =========== */
+.E .screen { background: linear-gradient(160deg, #2a0b5e 0%, #7a1fa2 45%, #ff6a3d 100%); color: #fff; font-family: Sora; }
+.E .lot, .E .name, .E .ovr, .E .amt, .E .btn, .E .call, .E .v, .E .n, .E .t, .E .tm b, .E .ring { font-weight: 800; letter-spacing: -.5px; }
+.E .set { color: #ffd7f0; } .E .lot { font-size: 18px; }
+.E .glass, .E .ib, .E .my, .E .card, .E .bid, .E .tm, .E .champ, .E .verdict, .E .tr, .E .btn { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.E .my, .E .card, .E .bid, .E .champ { border-radius: 24px; }
+.E .card.wish { background: linear-gradient(135deg, rgba(255,215,0,.35), rgba(255,255,255,.12)); border-color: #ffe27a; box-shadow: 0 0 30px rgba(255,226,122,.45); }
+.E .card .name { font-size: 22px; }
+.E .my .v { font-size: 15px; } .E .purse .v { font-size: 20px; } .E .amt { font-size: 30px !important; } .E .ovr { font-size: 40px; background: linear-gradient(#fff, #ffd7f0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.E .chip { border-radius: 99px; background: rgba(255,255,255,.2); } .E .chip.w { background: #ffe27a; color: #4a1a00; }
+.E .bar, .E .stat .t { background: rgba(255,255,255,.18); } .E .bar i { background: linear-gradient(90deg, #ffe27a, #ff9a5a); }
+.E .amt { font-size: 34px; }
+.E .ring { background: conic-gradient(#ffe27a 0 65%, rgba(255,255,255,.2) 65%); font-size: 22px; position: relative; }
+.E .ring::before { content: ""; position: absolute; inset: 6px; border-radius: 50%; background: #6a1a8f; }
+.E .ring span { position: relative; }
+.E .call { font-size: 14px; opacity: .95; }
+.E .btn { border-radius: 99px; font-size: 16px; }
+.E .btn.main { background: #fff; color: #7a1fa2; border: 0; box-shadow: 0 10px 30px rgba(0,0,0,.25); font-size: 18px; }
+.E .tm { border-radius: 18px; } .E .tm.me { border: 2px solid #fff; } .E .tm.lead { background: rgba(255,226,122,.35); border-color: #ffe27a; }
+.E .champ .k { color: #ffe27a; } .E .champ .n { font-size: 24px; }
+.E .verdict { border-radius: 18px; } .E .verdict .t { font-size: 22px; }
+.E .tabs span { border-radius: 99px; font-size: 12px; } .E .tabs span.on { background: #fff; color: #7a1fa2; }
+.E .tr { border-radius: 14px; font-size: 12px; } .E .tr.me { background: rgba(255,255,255,.3); border-color: #fff; }
+.E .tr .pts { font-weight: 800; } .E .tr.h { background: none; border: 0; backdrop-filter: none; }
+
+/* =========== F · TRADING FLOOR (market terminal, data-dense) =========== */
+.F .screen { background: #0a0e0b; color: #d6e2d8; font-family: "JetBrains Mono", monospace; gap: 6px; }
+.F .lot, .F .name, .F .ovr, .F .amt, .F .btn, .F .call, .F .v, .F .n, .F .t, .F .tm b, .F .ring { font-family: "JetBrains Mono"; font-weight: 700; }
+.F .set { color: #ffb000; } .F .lot { font-size: 15px; }
+.F .ib { border-radius: 3px; border: 1px solid #263028; font-size: 13px; }
+.F .ticker { font-size: 10px; white-space: nowrap; overflow: hidden; border-top: 1px solid #1c241e; border-bottom: 1px solid #1c241e; padding: 4px 0; color: #8aa190; }
+.F .ticker b { color: #2fe08a; font-weight: 700; } .F .ticker em { color: #ff5c5c; font-style: normal; }
+.F .my, .F .card, .F .bid { border: 1px solid #1f2a22; border-radius: 3px; background: #0d1310; }
+.F .my .v { font-size: 15px; } .F .purse .v { font-size: 19px; color: #2fe08a; }
+.F .bar { background: #18201a; border-radius: 0; height: 3px; } .F .bar i { background: #2fe08a; }
+.F .card.wish { border-color: #ffb000; box-shadow: inset 3px 0 0 #ffb000; }
+.F .card .name { font-size: 22px; } .F .ovr { font-size: 34px; color: #ffb000; }
+.F .chip { border-radius: 2px; border: 1px solid #2c382f; color: #9bb3a1; } .F .chip.w { border-color: #ffb000; color: #ffb000; }
+.F .stat .t { background: #18201a; border-radius: 0; height: 4px; }
+.F .spark { display: flex; align-items: flex-end; gap: 2px; height: 30px; margin-top: 8px; }
+.F .spark i { flex: 1; background: #2fe08a; opacity: .75; }
+.F .amt { font-size: 30px; color: #2fe08a; }
+.F .amt small { font-size: 12px; color: #2fe08a; margin-left: 6px; }
+.F .ring { border-radius: 3px; border: 1px solid #ffb000; color: #ffb000; width: 56px; height: 56px; font-size: 22px; }
+.F .call { color: #ffb000; font-size: 12px; letter-spacing: 1px; text-align: left; }
+.F .btn { border-radius: 3px; border: 1px solid #263028; background: #0d1310; font-size: 14px; color: #9bb3a1; height: 48px; }
+.F .btn.main { background: #2fe08a; color: #04140b; border: 0; font-size: 16px; }
+.F .btn.ps { color: #ff5c5c; border-color: #4a2424; }
+.F .tm { border-radius: 2px; border: 1px solid #1f2a22; background: #0d1310; } .F .tm b { font-size: 11px; } .F .tm.me { border-color: #2fe08a; } .F .tm.lead { border-color: #ffb000; }
+.F .champ, .F .verdict { border: 1px solid #1f2a22; background: #0d1310; border-radius: 3px; }
+.F .champ .k { color: #ffb000; } .F .champ .n { font-size: 20px; } .F .verdict .t { font-size: 16px; color: #2fe08a; }
+.F .tabs span { border-radius: 2px; font-size: 11px; color: #6c8272; } .F .tabs span.on { color: #ffb000; border: 1px solid #ffb000; }
+.F .tr { border-radius: 0; border-bottom: 1px solid #151c17; font-size: 11px; grid-template-columns: 18px 22px 1fr 22px 22px 22px 46px; } .F .tr.me { background: rgba(255,176,0,.08); }
+.F .tr .pts { color: #ffb000; } .F .tr .up { color: #2fe08a; } .F .tr .dn { color: #ff5c5c; }
+
+/* =========== G · ROYAL DURBAR (Indian heritage: maroon, saffron, gold filigree) =========== */
+.G .screen { background: radial-gradient(90% 50% at 50% 0%, #5a1424 0%, #2a0a12 70%); color: #fbe9c9; font-family: Poppins; }
+.G .screen::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .07; background-image: radial-gradient(circle at 10px 10px, #e8b64c 2px, transparent 2.5px); background-size: 20px 20px; }
+.G .lot, .G .name, .G .ovr, .G .amt, .G .btn, .G .call, .G .v, .G .n, .G .t, .G .tm b, .G .ring { font-family: "Yatra One", serif; letter-spacing: .3px; }
+.G .set { color: #ff9a2e; } .G .lot { font-size: 22px; color: #e8b64c; }
+.G .ib { border: 1px solid #8a5a2a; color: #e8b64c; }
+.G .my, .G .card, .G .bid, .G .champ, .G .verdict { background: #3d0f1b; border: 1px solid #c9a227; outline: 1px solid rgba(201,162,39,.35); outline-offset: 3px; border-radius: 14px; }
+.G .my { margin: 3px; } .G .my .v { font-size: 16px; } .G .purse .v { font-size: 22px; color: #e8b64c; }
+.G .bar { background: rgba(232,182,76,.15); } .G .bar i { background: linear-gradient(90deg, #ff8c1a, #e8b64c); }
+.G .card { margin: 3px; } .G .card::before { content: "❖"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #2a0a12; color: #e8b64c; padding: 0 8px; font-size: 14px; }
+.G .card.wish { border-color: #ff9a2e; box-shadow: 0 0 24px rgba(255,154,46,.3); }
+.G .card .name { font-size: 26px; color: #fff3dc; white-space: normal; } .G .ovr { color: #e8b64c; font-size: 44px; }
+.G .chip { border-radius: 99px; border: 1px solid #8a5a2a; color: #f1d7a8; } .G .chip.w { background: #ff8c1a; color: #2a0a12; border-color: #ff8c1a; }
+.G .stat .t { background: rgba(232,182,76,.12); } .G .stat .t i { background: #e8b64c !important; }
+.G .stat:nth-of-type(2) .t i { background: #1aa39a !important; }
+.G .bid { margin: 3px; } .G .amt { color: #e8b64c; font-size: 34px; }
+.G .ring { border: 5px double #e8b64c; color: #fff3dc; }
+.G .call { color: #ff9a2e; }
+.G .btn { border-radius: 14px; border: 1px solid #8a5a2a; color: #f1d7a8; background: #3d0f1b; font-size: 18px; }
+.G .btn.main { background: linear-gradient(180deg, #ffb347, #e07b00); color: #2a0a12; border: 1px solid #ffd28a; box-shadow: 0 6px 18px rgba(224,123,0,.4); }
+.G .tm { border-radius: 12px; border: 1px solid #5c2a2a; background: #3d0f1b; } .G .tm.me { border-color: #1aa39a; } .G .tm.lead { border-color: #e8b64c; background: #4a1a14; }
+.G .champ { margin: 3px; } .G .champ .k { color: #ff9a2e; } .G .champ .n { color: #e8b64c; font-size: 26px; }
+.G .verdict { margin: 3px; } .G .verdict .t { color: #e8b64c; }
+.G .tabs span { color: #c49a7a; font-size: 12px; } .G .tabs span.on { background: #e8b64c; color: #2a0a12; border-radius: 99px; }
+.G .tr { background: rgba(255,255,255,.03); border-bottom: 1px solid rgba(201,162,39,.15); border-radius: 8px; } .G .tr.me { background: rgba(255,140,26,.15); outline: 1px solid #ff9a2e; }
+.G .tr .pts { color: #e8b64c; font-family: "Yatra One"; font-size: 16px; } .G .tr .pos.q { color: #1aa39a; } .G .tr.h { background: none; border: 0; }
+
+/* =========== H · SWISS (minimal, white, one red accent) =========== */
+.H .screen { background: #fff; color: #111; font-family: "Inter Tight", Inter, sans-serif; gap: 10px; }
+.H .lot, .H .name, .H .ovr, .H .amt, .H .btn, .H .call, .H .v, .H .n, .H .t, .H .tm b, .H .ring { font-weight: 800; letter-spacing: -.8px; }
+.H .set { color: #ff3b1f; } .H .lot { font-size: 22px; }
+.H .ib { border: 1.5px solid #111; font-size: 13px; }
+.H .my { border-top: 2px solid #111; border-bottom: 1px solid #ddd; padding: 8px 0; }
+.H .my .v { font-size: 17px; } .H .purse .v { font-size: 22px; }
+.H .bar { background: #eee; border-radius: 0; height: 3px; } .H .bar i { background: #111; }
+.H .card { background: #f3f3f1; border-radius: 0; padding: 16px; }
+.H .card.wish { border-left: 6px solid #ff3b1f; }
+.H .card .name { font-size: 30px; white-space: normal; line-height: .95; } .H .ovr { font-size: 60px; color: #ff3b1f; } .H .ovr small { color: #111; }
+.H .chip { border-radius: 0; background: #111; color: #fff; } .H .chip.w { background: #ff3b1f; } .H .chip.tr8 { background: #fff; color: #111; outline: 1px solid #111; }
+.H .stat .t { background: #ddd; border-radius: 0; height: 4px; } .H .stat .t i { background: #111 !important; }
+.H .bid { border-top: 2px solid #111; border-bottom: 2px solid #111; padding: 12px 0; }
+.H .amt { font-size: 44px; }
+.H .ring { border: 2px solid #111; font-size: 26px; border-radius: 0; }
+.H .call { text-align: left; font-size: 14px; color: #ff3b1f; letter-spacing: 0; }
+.H .btn { border-radius: 0; border: 1.5px solid #111; font-size: 17px; }
+.H .btn.main { background: #111; color: #fff; }
+.H .tm { border-radius: 0; border-top: 2px solid #ddd; } .H .tm.me { border-top-color: #111; } .H .tm.lead { border-top-color: #ff3b1f; }
+.H .champ { border-top: 6px solid #111; padding-left: 0; } .H .champ .k { color: #ff3b1f; } .H .champ .n { font-size: 30px; }
+.H .verdict { background: #f3f3f1; } .H .verdict .t { font-size: 26px; }
+.H .tabs { border-bottom: 1px solid #ddd; } .H .tabs span { border-radius: 0; color: #888; } .H .tabs span.on { color: #111; box-shadow: inset 0 -3px 0 #ff3b1f; }
+.H .tr { border-radius: 0; border-bottom: 1px solid #eee; } .H .tr.me { background: #fff1ee; }
+.H .tr .pts { font-weight: 800; } .H .tr .pos.q { color: #ff3b1f; font-weight: 800; }
+
+/* =========== I · PIXEL ARCADE (8-bit, CRT) =========== */
+.I .screen { background: #12173a; color: #e9ecff; font-family: VT323, monospace; font-size: 17px; }
+.I .screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 2px, transparent 2px 4px); }
+.I .lot, .I .name, .I .ovr, .I .amt, .I .btn, .I .call, .I .v, .I .n, .I .t, .I .tm b, .I .ring, .I .set, .I .k, .I .chip { font-family: "Press Start 2P", monospace; letter-spacing: 0; }
+.I .set { color: #ffde00; font-size: 8px; } .I .lot { font-size: 12px; margin-top: 4px; }
+.I .crest { border-radius: 0; }
+.I .ib { border-radius: 0; background: #262d66; box-shadow: 0 0 0 3px #000; font-size: 13px; }
+.I .my, .I .card, .I .bid, .I .champ, .I .verdict, .I .btn, .I .tm, .I .tr { border-radius: 0; box-shadow: 0 0 0 3px #000, 4px 4px 0 3px #000; }
+.I .my { background: #1d6b5a; margin: 3px; } .I .my .k { font-size: 6px; } .I .my .v { font-size: 10px; margin-top: 4px; } .I .purse .v { font-size: 12px; color: #ffde00; }
+.I .bar { border-radius: 0; background: #0d3a30; height: 6px; } .I .bar i { background: #ffde00; }
+.I .card { background: #262d66; margin: 3px; } .I .card.wish { background: #3a2a6e; box-shadow: 0 0 0 3px #ffde00, 4px 4px 0 3px #000; }
+.I .card .meta { font-size: 15px; letter-spacing: 0; } .I .card .name { font-size: 15px; line-height: 1.3; white-space: normal; margin: 6px 0; } .I .ovr { font-size: 26px; color: #ffde00; } .I .ovr small { font-size: 6px; margin-top: 6px; }
+.I .chip { font-size: 7px; border-radius: 0; background: #12173a; color: #9fa8ff; padding: 4px 6px; } .I .chip.w { background: #ffde00; color: #000; }
+.I .stat { font-size: 15px; } .I .stat .t { border-radius: 0; background: #12173a; height: 8px; }
+.I .bid { background: #ff2e88; margin: 3px; } .I .bid .lbl { font-size: 15px; } .I .amt { font-size: 20px; color: #fff; } .I .bid .by { font-size: 15px; } .I .bid .say { font-size: 14px; }
+.I .ring { border-radius: 0; background: #000; color: #00e0ff; font-size: 22px; width: 58px; height: 58px; }
+.I .call { color: #00e0ff; font-size: 9px; line-height: 1.6; }
+.I .btn { background: #262d66; font-size: 10px; margin: 3px; } .I .btn.main { background: #ffde00; color: #000; font-size: 12px; }
+.I .tm { background: #262d66; margin: 3px 4px 3px 3px; width: 58px; } .I .tm b { font-size: 7px; margin-top: 4px; } .I .tm small { font-size: 13px; } .I .tm.me { background: #1d6b5a; } .I .tm.lead { background: #ff2e88; }
+.I .champ { background: #ff2e88; margin: 3px; } .I .champ .crest { border-radius: 0; } .I .champ .k { font-size: 8px; color: #ffde00; } .I .champ .n { font-size: 13px; line-height: 1.4; margin-top: 6px; }
+.I .verdict { background: #262d66; margin: 3px; } .I .verdict .t { font-size: 12px; color: #ffde00; } .I .verdict p { font-size: 15px; }
+.I .tabs span { border-radius: 0; font-size: 15px; color: #9fa8ff; } .I .tabs span.on { background: #ffde00; color: #000; }
+.I .tbl { gap: 6px; padding: 3px; } .I .tr { background: #1b2150; font-size: 16px; box-shadow: 0 0 0 2px #000; } .I .tr.me { background: #1d6b5a; }
+.I .tr .pts { color: #ffde00; font-family: "Press Start 2P"; font-size: 9px; } .I .tr .pos.q { color: #00e0ff; } .I .tr.h { background: none; box-shadow: none; font-size: 13px; }
+
+/* =========== J · MATCHDAY POSTER (risograph print) =========== */
+.J .screen { background: #f2ead8; color: #1a1a2e; font-family: "Space Mono", monospace; background-image: radial-gradient(rgba(0,120,191,.14) 1px, transparent 1.4px); background-size: 6px 6px; }
+.J .lot, .J .name, .J .ovr, .J .amt, .J .btn, .J .call, .J .v, .J .n, .J .t, .J .tm b, .J .ring { font-family: Anton, sans-serif; letter-spacing: .5px; text-transform: uppercase; }
+.J .set { color: #ff48b0; } .J .lot { font-size: 24px; color: #0078bf; text-shadow: 2px 2px 0 #ff48b0; }
+.J .ib { border: 2px solid #1a1a2e; background: #ffe800; }
+.J .my { background: #0078bf; color: #fff; transform: rotate(-.8deg); }
+.J .my .v { font-size: 17px; } .J .purse .v { font-size: 22px; color: #ffe800; }
+.J .bar { background: rgba(255,255,255,.25); border-radius: 0; } .J .bar i { background: #ffe800; }
+.J .card { background: #fff; transform: rotate(.6deg); box-shadow: 4px 4px 0 #0078bf; }
+.J .card::before { content: ""; position: absolute; top: -9px; left: 40%; width: 70px; height: 18px; background: rgba(255,232,0,.75); transform: rotate(-4deg); }
+.J .card.wish { box-shadow: 4px 4px 0 #ff48b0; }
+.J .card .name { font-size: 34px; color: #1a1a2e; text-shadow: 2px 2px 0 #ffe800; } .J .ovr { font-size: 52px; color: #ff48b0; text-shadow: 3px 3px 0 #0078bf; }
+.J .chip { border-radius: 0; border: 1.5px solid #1a1a2e; } .J .chip.w { background: #ff48b0; color: #fff; } .J .chip.o { background: #ffe800; }
+.J .stat .t { background: #eadfc6; border-radius: 0; } .J .stat .t i { background: #0078bf !important; } .J .stat:nth-of-type(2) .t i { background: #ff48b0 !important; }
+.J .bid { background: #ff48b0; color: #fff; transform: rotate(-.6deg); }
+.J .amt { font-size: 40px; color: #ffe800; text-shadow: 2px 2px 0 #0078bf; }
+.J .ring { background: #ffe800; color: #1a1a2e; border: 2px solid #1a1a2e; font-size: 28px; }
+.J .call { color: #0078bf; font-size: 18px; }
+.J .btn { border: 2px solid #1a1a2e; background: #fff; border-radius: 0; box-shadow: 3px 3px 0 #1a1a2e; font-size: 20px; }
+.J .btn.main { background: #ffe800; font-size: 22px; }
+.J .tm { border-radius: 0; background: #fff; border: 1.5px solid #1a1a2e; } .J .tm.me { background: #bfe3f7; } .J .tm.lead { background: #ffd1ea; }
+.J .champ { background: #0078bf; color: #fff; transform: rotate(-1deg); } .J .champ .k { color: #ffe800; } .J .champ .n { font-size: 32px; text-shadow: 2px 2px 0 #ff48b0; }
+.J .verdict { background: #fff; border: 2px solid #1a1a2e; } .J .verdict .t { color: #ff48b0; font-size: 26px; }
+.J .tabs span { border-radius: 0; font-size: 12px; } .J .tabs span.on { background: #1a1a2e; color: #ffe800; }
+.J .tr { border-radius: 0; border-bottom: 1.5px dashed #1a1a2e; font-size: 12px; padding: 4px 8px; } .J .tr.me { background: #ffe800; }
+.J .tr .pts { font-family: Anton; font-size: 17px; color: #ff48b0; } .J .tr .pos.q { color: #0078bf; font-weight: 700; } .J .tr.h { border: 0; }
+
+/* =========== K · TURF (the pitch, chalk lines, stadium scoreboard) =========== */
+.K .screen { background: repeating-linear-gradient(180deg, #1f6b34 0 44px, #237a3b 44px 88px); color: #fff; font-family: "Saira Condensed", sans-serif; font-weight: 600; }
+.K .lot, .K .name, .K .ovr, .K .amt, .K .btn, .K .call, .K .v, .K .n, .K .t, .K .tm b, .K .ring { font-family: "Saira Condensed"; font-weight: 800; text-transform: uppercase; }
+.K .set { color: #d8ff7a; } .K .lot { font-size: 24px; }
+.K .ib { border: 2px solid rgba(255,255,255,.85); }
+.K .my, .K .card, .K .champ, .K .verdict { background: rgba(0,0,0,.22); border: 2px solid rgba(255,255,255,.85); border-radius: 10px; }
+.K .my .v { font-size: 20px; } .K .purse .v { font-size: 26px; color: #d8ff7a; }
+.K .bar { background: rgba(255,255,255,.2); } .K .bar i { background: #fff; }
+.K .card.wish { border-color: #ffd400; box-shadow: 0 0 0 4px rgba(255,212,0,.3); }
+.K .card .name { font-size: 34px; white-space: normal; line-height: .95; } .K .ovr { font-size: 52px; color: #ffd400; }
+.K .chip { border: 1.5px solid #fff; border-radius: 4px; } .K .chip.w { background: #ffd400; color: #133d1f; border-color: #ffd400; }
+.K .stat { font-size: 13px; } .K .stat .t { background: rgba(255,255,255,.18); } .K .stat .t i { background: #fff !important; }
+.K .bid { background: #0b0f0c; border: 4px solid #3a3f3b; border-radius: 6px; box-shadow: inset 0 0 0 2px #000; }
+.K .bid .lbl { color: #8b928c; } .K .amt { font-family: "Saira Condensed"; color: #ffd400; font-size: 42px; text-shadow: 0 0 10px rgba(255,212,0,.6); letter-spacing: 2px; }
+.K .bid .say { color: #b7c2b9; }
+.K .ring { border: 3px dashed #fff; color: #fff; font-size: 28px; background: #1f6b34; }
+.K .call { color: #ffd400; font-size: 18px; text-shadow: 0 2px 0 rgba(0,0,0,.3); }
+.K .btn { border-radius: 10px; border: 2px solid #fff; background: rgba(0,0,0,.2); font-size: 20px; }
+.K .btn.main { background: #fff; color: #145227; border: 0; font-size: 22px; box-shadow: 0 5px 0 rgba(0,0,0,.3); }
+.K .tm { border-radius: 8px; background: rgba(0,0,0,.25); border: 1.5px solid rgba(255,255,255,.4); } .K .tm.me { border-color: #d8ff7a; } .K .tm.lead { border-color: #ffd400; background: rgba(255,212,0,.2); }
+.K .champ .k { color: #ffd400; } .K .champ .n { font-size: 32px; }
+.K .verdict .t { color: #d8ff7a; font-size: 26px; }
+.K .tabs span { color: rgba(255,255,255,.7); text-transform: uppercase; font-weight: 700; } .K .tabs span.on { background: #fff; color: #145227; }
+.K .tbl { background: #0b0f0c; border: 4px solid #3a3f3b; border-radius: 6px; padding: 4px 6px; gap: 0; }
+.K .tr { border-radius: 0; border-bottom: 1px solid #1d221e; font-family: "Saira Condensed"; font-size: 15px; } .K .tr.me { background: rgba(255,212,0,.12); }
+.K .tr .pts { color: #ffd400; font-weight: 800; } .K .tr .pos.q { color: #d8ff7a; }
+
+/* =========== L · AUCTION HOUSE (luxury, black and champagne, serif) =========== */
+.L .screen { background: #0c0c0c; color: #efe6d2; font-family: Manrope, sans-serif; gap: 10px; }
+.L .lot, .L .name, .L .ovr, .L .amt, .L .call, .L .v, .L .n, .L .t, .L .tm b, .L .ring { font-family: "Playfair Display", serif; font-weight: 600; }
+.L .set { color: #c8a96a; letter-spacing: 3px; font-size: 9px; } .L .lot { font-size: 22px; font-style: italic; }
+.L .ib { border: 1px solid #3a3326; color: #c8a96a; }
+.L .my, .L .card, .L .bid, .L .champ, .L .verdict { border: 1px solid #3a3326; border-radius: 0; background: #121110; position: relative; }
+.L .card::after, .L .champ::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(200,169,106,.25); pointer-events: none; }
+.L .my .k, .L .card .meta, .L .bid .lbl { letter-spacing: 3px; }
+.L .my .v { font-size: 17px; } .L .purse .v { font-size: 22px; color: #c8a96a; }
+.L .bar { background: #2a2620; height: 2px; border-radius: 0; } .L .bar i { background: #c8a96a; }
+.L .card { padding: 18px; } .L .card.wish { border-color: #c8a96a; }
+.L .card .name { font-size: 28px; white-space: normal; } .L .ovr { font-size: 46px; color: #c8a96a; font-style: italic; }
+.L .chip { border-radius: 0; border: 1px solid #3a3326; color: #b8ad95; letter-spacing: 2px; font-weight: 600; } .L .chip.w { border-color: #c8a96a; color: #c8a96a; }
+.L .stat { letter-spacing: 2px; } .L .stat .t { background: #2a2620; height: 2px; border-radius: 0; } .L .stat .t i { background: #c8a96a !important; }
+.L .amt { font-size: 40px; color: #f5ecd8; }
+.L .ring { border: 1px solid #c8a96a; color: #c8a96a; font-size: 26px; }
+.L .call { font-size: 15px; font-style: italic; color: #c8a96a; }
+.L .btn { border-radius: 0; border: 1px solid #3a3326; color: #b8ad95; font-family: Manrope; font-size: 12px; letter-spacing: 3px; font-weight: 600; }
+.L .btn.main { background: #c8a96a; color: #0c0c0c; border: 0; }
+.L .tm { border-radius: 0; border: 1px solid #2a2620; } .L .tm.me { border-color: #6f8f6a; } .L .tm.lead { border-color: #c8a96a; }
+.L .champ { padding: 18px; } .L .champ .k { color: #c8a96a; letter-spacing: 3px; } .L .champ .n { font-size: 26px; }
+.L .verdict .t { font-style: italic; color: #c8a96a; }
+.L .tabs { border-bottom: 1px solid #2a2620; } .L .tabs span { color: #7d745f; font-size: 12px; letter-spacing: 1px; } .L .tabs span.on { color: #c8a96a; box-shadow: inset 0 -1px 0 #c8a96a; border-radius: 0; }
+.L .tr { border-radius: 0; border-bottom: 1px solid #1d1b17; } .L .tr.me { background: rgba(200,169,106,.08); }
+.L .tr .pts { font-family: "Playfair Display"; color: #c8a96a; font-size: 16px; } .L .tr .pos.q { color: #c8a96a; }
+
+/* =========== M · DAYLIGHT (clean, friendly light app) =========== */
+.M .screen { background: #eef1f6; color: #141a26; font-family: "Plus Jakarta Sans", sans-serif; }
+.M .lot, .M .name, .M .ovr, .M .amt, .M .btn, .M .call, .M .v, .M .n, .M .t, .M .tm b, .M .ring { font-weight: 800; letter-spacing: -.5px; }
+.M .set { color: #2f6bff; } .M .lot { font-size: 20px; }
+.M .ib { background: #fff; box-shadow: 0 2px 6px rgba(20,26,38,.08); font-size: 14px; }
+.M .my, .M .card, .M .bid, .M .champ, .M .verdict { background: #fff; border-radius: 22px; box-shadow: 0 6px 18px rgba(20,26,38,.07); }
+.M .my .v { font-size: 17px; } .M .purse .v { font-size: 22px; color: #0f9d6b; }
+.M .bar { background: #eef1f6; } .M .bar i { background: #0f9d6b; }
+.M .card.wish { box-shadow: 0 0 0 2px #ffb020, 0 10px 24px rgba(255,176,32,.25); }
+.M .card .name { font-size: 26px; } .M .ovr { font-size: 44px; color: #2f6bff; }
+.M .chip { border-radius: 99px; background: #eef1f6; color: #4a5368; } .M .chip.w { background: #fff2d6; color: #b36b00; } .M .chip.o { background: #e3ecff; color: #2f6bff; }
+.M .stat .t { background: #eef1f6; }
+.M .bid { background: linear-gradient(135deg, #2f6bff, #6a4bff); color: #fff; }
+.M .amt { font-size: 36px; }
+.M .ring { background: #fff; color: #2f6bff; font-size: 24px; box-shadow: 0 0 0 5px rgba(255,255,255,.35); }
+.M .call { color: #2f6bff; font-size: 15px; }
+.M .btn { background: #fff; border-radius: 18px; font-size: 16px; box-shadow: 0 3px 8px rgba(20,26,38,.08); color: #4a5368; }
+.M .btn.main { background: #141a26; color: #fff; font-size: 18px; }
+.M .tm { background: #fff; border-radius: 16px; box-shadow: 0 3px 8px rgba(20,26,38,.06); } .M .tm.me { box-shadow: 0 0 0 2px #0f9d6b; } .M .tm.lead { box-shadow: 0 0 0 2px #2f6bff; }
+.M .champ { background: linear-gradient(135deg, #ffb020, #ff7a1a); color: #fff; } .M .champ .k { color: #fff6e0; } .M .champ .n { font-size: 24px; }
+.M .verdict .t { color: #0f9d6b; font-size: 22px; }
+.M .tabs { background: #fff; border-radius: 14px; padding: 4px; } .M .tabs span { color: #6b7488; font-size: 12px; } .M .tabs span.on { background: #141a26; color: #fff; }
+.M .tr { background: #fff; border-radius: 14px; } .M .tr.me { box-shadow: 0 0 0 2px #2f6bff; }
+.M .tr .pts { font-weight: 800; color: #2f6bff; } .M .tr .pos.q { color: #0f9d6b; font-weight: 800; } .M .tr.h { background: none; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Yatra+One&family=Poppins:wght@400;600;700&family=Inter+Tight:wght@500;800&family=Press+Start+2P&family=VT323&family=Anton&family=Space+Mono:wght@400;700&family=Saira+Condensed:wght@600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&family=Manrope:wght@500;600;800&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+<header class="intro">
+  <h1>Unsold: thirteen UI directions</h1>
+  <p>Each direction shows the two screens that matter most: the live auction (with a wishlist player on the block) and the season results. Same content, same layout logic, different personality. A–F are the first batch; G–M (marked NEW) are new. Pick one, or mix pieces from several, and I'll rebuild the game UI around it.</p>
+  <nav class="jump" id="jump"></nav>
+</header>
+<main id="dirs"></main>
+
+<script>
+const TEAMS = {
+  MUM: ["Mumbai Monsoon", "#1d4e89"], CHE: ["Chennai Surge", "#0f766e"], BLR: ["Bengaluru Orbit", "#5b21b6"],
+  KOL: ["Kolkata Monarchs", "#7f1d1d"], HYD: ["Hyderabad Pearls", "#2b6c8f"], DEL: ["Delhi Comets", "#1e3a8a"],
+  PUN: ["Punjab Stallions", "#9f1239"], JAI: ["Jaipur Mirage", "#b45309"], LKO: ["Lucknow Lancers", "#166534"], AHM: ["Ahmedabad Kites", "#991b1b"],
+};
+const crest = (t, extra = "") => `<div class="crest" style="background:${TEAMS[t][1]};${extra}">${t}</div>`;
+const TABLE = [["KOL",9,7,2,14,"+1.21"],["HYD",9,6,3,12,"+0.64"],["CHE",9,6,3,12,"+0.93"],["JAI",9,6,3,12,"+0.12"],["PUN",9,6,3,12,"-0.08"],["MUM",9,4,5,8,"-0.22"],["LKO",9,3,6,6,"-0.51"],["BLR",9,3,6,6,"-0.66"],["DEL",9,2,7,4,"-0.71"],["AHM",9,2,7,4,"-0.94"]];
+const STRIP = [["MUM","96.5",5,""],["CHE","84.5",6,"me"],["BLR","71",7,"lead"],["KOL","102",4,""],["HYD","88",5,""]];
+
+const DIRS = [
+  { id: "A", name: "Prime Time", desc: "A refined version of today's look: a TV-broadcast feel with deep navy, gold and condensed headline type. The lowest-risk option, with clean spacing, softer glass panels and stronger hierarchy.",
+    traits: ["Dark", "Bebas Neue + Inter", "Gold accent", "Broadcast"] },
+  { id: "B", name: "Floodlights", desc: "Stadium at night. Pitch-black with electric lime and cyan neon, angled card corners and a hard, sporty edge. High energy, made for bidding wars.",
+    traits: ["Dark", "Oswald + Space Grotesk", "Neon", "Aggressive"] },
+  { id: "C", name: "Scorebook", desc: "A classic cricket scorebook on cream paper: ruled lines, serif headlines, typewriter numbers and red-ink accents. Calm, nostalgic and very readable in daylight.",
+    traits: ["Light", "Fraunces + IBM Plex Mono", "Paper", "Editorial"] },
+  { id: "D", name: "Paddle Pop", desc: "Bold, flat and playful. Thick outlines, chunky drop shadows, candy colours and pill buttons. Feels like a party game you'd play with friends.",
+    traits: ["Light", "Archivo Black + Nunito", "Cartoon", "Fun"] },
+  { id: "E", name: "Glass Arena", desc: "A vibrant purple-to-sunset gradient behind frosted-glass cards. Modern and premium, like a sports streaming app.",
+    traits: ["Gradient", "Sora", "Glassmorphism", "Premium"] },
+  { id: "F", name: "Trading Floor", desc: "The auction as a stock market: a dense terminal look, monospace numbers, a scrolling sold ticker, a price-history sparkline and green/red movers.",
+    traits: ["Dark", "JetBrains Mono", "Data-dense", "Unique"] },
+  { id: "G", name: "Royal Durbar", desc: "Indian heritage, maharaja-style: deep maroon, saffron and gold with double filigree borders, a dotted motif background and a Devanagari-inspired display font. Grand and festive, very IPL.",
+    traits: ["Dark", "Yatra One + Poppins", "Ornate", "Desi"], fresh: true },
+  { id: "H", name: "Swiss", desc: "Radically minimal. White page, black type, one red accent, hard rules instead of boxes, and huge numbers. Nothing decorative; the information is the design.",
+    traits: ["Light", "Inter Tight", "Minimal", "Typographic"], fresh: true },
+  { id: "I", name: "Pixel Arcade", desc: "A retro 8-bit game: pixel fonts, chunky pixel shadows, CRT scanlines and arcade yellow/pink/cyan. Makes the auction feel like a boss fight.",
+    traits: ["Dark", "Press Start 2P + VT323", "Retro", "Gamey"], fresh: true },
+  { id: "J", name: "Matchday Poster", desc: "Risograph-printed match poster: halftone dots, misregistered pink and blue ink, tape on the cards and slightly tilted panels. Loud, arty and hand-made.",
+    traits: ["Light", "Anton + Space Mono", "Print", "Expressive"], fresh: true },
+  { id: "K", name: "Turf", desc: "Set on the pitch itself: mown-grass stripes, white chalk outlines, a dashed 30-yard-circle timer and the bid on an old stadium scoreboard with glowing yellow digits.",
+    traits: ["Green", "Saira Condensed", "Stadium", "Cricket"], fresh: true },
+  { id: "L", name: "Auction House", desc: "A luxury auction room in the style of a fine-art sale: black and champagne, serif italics, thin double frames and wide-spaced capitals. Every lot feels like a masterpiece.",
+    traits: ["Dark", "Playfair Display + Manrope", "Luxury", "Elegant"], fresh: true },
+  { id: "M", name: "Daylight", desc: "A clean, friendly light-mode app: soft grey background, white rounded cards with gentle shadows, a blue-violet bid card and clear green/blue status colours. The most familiar and accessible option.",
+    traits: ["Light", "Plus Jakarta Sans", "Clean", "Accessible"], fresh: true },
+];
+
+function auction(d) {
+  const ticker = d.id === "F" ? `<div class="ticker">SOLD ▸ <b>J.BUMRAO</b> HYD 25.0CR ▲ · <b>H.KLAVER</b> AHM 25.0CR ▲ · <em>R.ASHWINE</em> UNSOLD ▼ · <b>S.GILLMAN</b> MUM 18.5CR ▲</div>` : "";
+  const spark = d.id === "F" ? `<div class="spark">${[2,2.4,3,4,5.5,6,8,9,10.5,12,13,14.5].map(v => `<i style="height:${v / 14.5 * 100}%"></i>`).join("")}</div>` : "";
+  const amt = d.id === "F" ? `₹14.50CR<small>▲ +625%</small>` : (d.id === "C" ? "₹14.50 Cr" : "₹14.5 CR");
+  return `
+  <div class="screen auction">
+    <div class="row top">
+      <div class="ib">✕</div>
+      <div class="grow"><div class="set">MARQUEE SET · 3/12 ›</div><div class="lot">LOT 3 / 214</div></div>
+      <div class="ib">★</div><div class="ib">☾</div><div class="ib">♪</div>
+    </div>
+    ${ticker}
+    <div class="my">
+      <div class="row">${crest("CHE")}<div class="grow ell" style="font-size:11px;font-weight:700;opacity:.8">CHENNAI SURGE · YOU</div><div style="font-size:10px;opacity:.7">SQUAD ›</div></div>
+      <div class="stats">
+        <div class="purse"><div class="k">Purse</div><div class="v">₹84.5 Cr</div></div>
+        <div><div class="k">Squad</div><div class="v">6/25</div></div>
+        <div><div class="k">Overseas</div><div class="v">2/8</div></div>
+        <div><div class="k">Max bid</div><div class="v">₹62 Cr</div></div>
+      </div>
+      <div class="bar"><i></i></div>
+    </div>
+    <div class="card wish">
+      <div class="row" style="align-items:flex-start">
+        <div class="grow">
+          <div class="meta">AUS · Batter · Capped</div>
+          <div class="name">TRISTAN HEADLEY</div>
+          <div class="chips"><span class="chip w">★ Wishlist</span><span class="chip o">✈ Overseas</span><span class="chip tr8">Opener</span></div>
+        </div>
+        <div class="ovr">91<small>OVR</small></div>
+      </div>
+      <div class="stat">BAT <div class="t"><i style="width:91%;background:#2ecc8f"></i></div> 91</div>
+      <div class="stat">BOWL <div class="t"><i style="width:25%;background:#4f8cff"></i></div> 25</div>
+      ${spark}
+    </div>
+    <div class="bid">
+      <div class="ring"><span>7</span></div>
+      <div class="grow">
+        <div class="lbl">Current bid</div>
+        <div class="amt">${amt}</div>
+        <div class="by">${crest("BLR")} Bengaluru Orbit</div>
+        <div class="say">“Fourteen and a half crore! Anyone at fifteen?”</div>
+      </div>
+    </div>
+    <div class="call">BLR BID — YOUR CALL: ₹15 CR?</div>
+    <div class="acts"><div class="btn main">BID ₹15 CR</div><div class="btn ps">PASS</div><div class="btn ff">»</div></div>
+    <div class="strip">${STRIP.map(([t, p, n, c]) => `<div class="tm ${c}">${crest(t)}<b>${p} CR</b><small>${n} · ${c === "me" ? "YOU" : "AI"}</small></div>`).join("")}</div>
+  </div>`;
+}
+
+function results(d) {
+  const nrr = (v) => d.id === "F" ? `<span class="${v.startsWith("-") ? "dn" : "up"}">${v.startsWith("-") ? "▼" : "▲"}${v.replace(/[+-]/, "")}</span>` : v;
+  return `
+  <div class="screen results">
+    <div class="champ">${crest("KOL")}<div class="grow"><div class="k">★ CHAMPIONS ★</div><div class="n">KOLKATA MONARCHS</div></div></div>
+    <div class="verdict"><div class="row">${crest("CHE", "width:30px;height:30px")}<div class="grow"><div class="t">FINISHED #3</div><p>League: 6 W – 3 L · NRR +0.93 · Reached the playoffs.</p></div></div></div>
+    <div class="tabs"><span class="on">Table</span><span>Matches</span><span>Stats</span><span>Squads</span><span>Ratings</span></div>
+    <div class="tbl">
+      <div class="tr h"><span>#</span><span></span><span>TEAM</span><span class="r">P</span><span class="r">W</span><span class="r">L</span><span class="r">PTS</span></div>
+      ${TABLE.map(([t, p, w, l, pts, n], i) => `<div class="tr ${t === "CHE" ? "me" : ""}"><span class="pos ${i < 4 ? "q" : ""}">${i + 1}</span>${crest(t)}<span class="ell"><b>${t}</b>${d.id === "F" ? " " + nrr(n) : ""}</span><span class="r">${p}</span><span class="r">${w}</span><span class="r">${l}</span><span class="r pts">${pts}</span></div>`).join("")}
+    </div>
+    <div class="foot"><div class="btn main">PLAY AGAIN</div><div class="btn">Home</div></div>
+  </div>`;
+}
+
+const main = document.getElementById("dirs");
+const jump = document.getElementById("jump");
+const only = new URLSearchParams(location.search).get("only");
+for (const d of DIRS) {
+  if (only && !only.split(",").includes(d.id)) continue;
+  jump.insertAdjacentHTML("beforeend", `<a href="#dir-${d.id}">${d.id} · ${d.name}${d.fresh ? " ✦" : ""}</a>`);
+  main.insertAdjacentHTML("beforeend", `
+  <section class="dir" id="dir-${d.id}">
+    <div class="dir-head"><span class="tag">${d.id}</span><h2>${d.name}</h2>${d.fresh ? '<span class="traits"><span>NEW</span></span>' : ""}</div>
+    <p class="dir-desc">${d.desc}</p>
+    <div class="traits">${d.traits.map(t => `<span>${t}</span>`).join("")}</div>
+    <div class="phones ${d.id}">
+      <div class="phone-wrap"><div class="phone">${auction(d)}</div><div class="cap">Live auction</div></div>
+      <div class="phone-wrap"><div class="phone">${results(d)}</div><div class="cap">Season results</div></div>
+    </div>
+  </section>`);
+}
+</script>
+</body>
+</html>

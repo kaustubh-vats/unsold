@@ -176,6 +176,47 @@ func test_difficulty_levels() -> void:
 	ok(spent["easy"] < spent["medium"] and spent["medium"] < spent["hard"], "easy < medium < hard spending")
 
 
+## Personas: each AI franchise shops like its real-life counterpart.
+func test_personas() -> void:
+	var st := {}
+	for tid in AI.PERSONAS:
+		st[tid] = {"unc": 0, "os": 0, "spin": 0, "top": 0, "spent": 0, "bat": 0, "PACE": 0, "AR": 0}
+	var seeds := [11, 12, 13, 14]
+	for seed in seeds:
+		var state := _ai_auction(seed, "medium")
+		for tid in state["teams"]:
+			var sq: Dictionary = state["teams"][tid]["squad"]
+			for pid in sq:
+				var p := DB.player(pid)
+				var price := int(sq[pid])
+				st[tid]["spent"] += price
+				if not p["capped"]:
+					st[tid]["unc"] += price
+				if p["overseas"]:
+					st[tid]["os"] += price
+				if p["role"] == "SPIN":
+					st[tid]["spin"] += price
+				if p["role"] in ["PACE", "AR"]:
+					st[tid][p["role"]] += price
+				if p["role"] == "BAT":
+					st[tid]["bat"] += price
+			var top := 0
+			for pid in sq:
+				top = maxi(top, int(sq[pid]))
+			st[tid]["top"] += top
+	var share := func(tid, k): return float(st[tid][k]) / maxf(1.0, float(st[tid]["spent"]))
+	for tid in st:
+		print("      %s %-22s uncapped %2.0f%%  overseas %2.0f%%  spin %2.0f%%  bat %2.0f%%  pace %2.0f%%  ar %2.0f%%  top %s" % [tid, AI.persona(tid)["label"],
+			share.call(tid, "unc") * 100, share.call(tid, "os") * 100, share.call(tid, "spin") * 100, share.call(tid, "bat") * 100, share.call(tid, "PACE") * 100, share.call(tid, "AR") * 100,
+			DB.fmt_price(st[tid]["top"] / seeds.size())])
+	ok(share.call("JAI", "unc") > share.call("BLR", "unc"), "Moneyball spends more on uncapped than the star chasers")
+	ok(share.call("KOL", "os") > share.call("DEL", "os"), "KKR-style spends more on overseas than the rebuilders")
+	ok(share.call("BLR", "bat") > share.call("CHE", "bat"), "star chasers spend more on batters")
+	ok(st["BLR"]["top"] > st["JAI"]["top"], "star chasers' biggest buy beats Moneyball's")
+	ok(share.call("CHE", "spin") + share.call("CHE", "AR") > share.call("BLR", "spin") + share.call("BLR", "AR"), "Chennai-style spends more on spin + all-rounders")
+	ok(share.call("MUM", "PACE") > share.call("BLR", "PACE"), "Mumbai-style spends more on pace")
+
+
 func _ai_auction(seed: int, diff: String) -> Dictionary:
 	if true:
 		var state := {"meta": {"host": "x", "status": "lobby", "seed": seed,

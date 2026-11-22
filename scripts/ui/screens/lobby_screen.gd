@@ -100,6 +100,7 @@ func _render() -> void:
 			pv.add_child(row)
 		body.add_child(pl)
 
+	body.add_child(_wishlist_panel())
 	body.add_child(UI.caption("Auction settings"))
 	var sp := UI.glass(16)
 	var sv := UI.vbox(14)
@@ -145,6 +146,24 @@ func _render() -> void:
 		footer.add_child(start)
 	else:
 		footer.add_child(UI.center(UI.label("Waiting for the host to start the auction…", 15, UI.MUTED)))
+
+
+## "★ My wishlist": star players before the auction to get alerts when they're up.
+func _wishlist_panel() -> Control:
+	var p := Views.tap_panel(UI.box(Color(UI.GOLD, 0.08), 16, 14, Color(UI.GOLD, 0.45)), func():
+		var sh := Sheet.open(self, "WISHLIST", Views.wishlist_page)
+		sh.closed.connect(_render))
+	var h := UI.hbox(12)
+	h.add_child(UI.display("★", 38, UI.GOLD))
+	var v := UI.vbox(0)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var n := Game.wishlist.size()
+	v.add_child(UI.display("MY WISHLIST" + (" (%d)" % n if n > 0 else ""), 22, UI.GOLD))
+	v.add_child(UI.wrap(UI.label("Star the players you want. We'll alert you when they come up." if n == 0
+		else "%d player%s starred. Tap to edit." % [n, "" if n == 1 else "s"], 12, UI.MUTED)))
+	h.add_child(v)
+	h.add_child(UI.caption("Edit ›", UI.GOLD, 11))
+	return Views.fill_tap(p, h)
 
 
 func _setting(title: String, control: Control) -> Control:

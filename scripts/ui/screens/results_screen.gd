@@ -42,7 +42,7 @@ func _ready() -> void:
 	bv.add_child(wn)
 	var who := s.team_owner_name(winner)
 	if who != "" and not won:
-		bv.add_child(UI.label("Managed by " + who, 14, UI.MUTED))
+		bv.add_child(UI.wrap(UI.label("Managed by " + who, 14, UI.MUTED)))
 	bh.add_child(bv)
 	add_child(banner)
 
@@ -57,7 +57,7 @@ func _ready() -> void:
 	vv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var title := "YOU WIN THE TITLE!" if won else ("FINISHED #%d" % my_pos)
 	vv.add_child(UI.display(title, 30, vcol))
-	vv.add_child(UI.label(_verdict_line(my, my_pos, won), 13, UI.MUTED))
+	vv.add_child(UI.wrap(UI.label(_verdict_line(my, my_pos, won), 13, UI.MUTED)))
 	vh.add_child(vv)
 	add_child(verdict)
 	if won:
@@ -174,7 +174,7 @@ func _table() -> Control:
 		h.add_child(_cell("%+.3f" % r["nrr"], 58, UI.MUTED))
 		Views.fill_tap(p, h)
 		v.add_child(p)
-	v.add_child(UI.caption("Top 4 qualify for the playoffs  •  tap a team for its squad and season stats", UI.DIM, 10))
+	v.add_child(UI.wrap(UI.caption("Top 4 qualify for the playoffs  •  tap a team for its squad and season stats", UI.DIM, 10)))
 	return v
 
 
@@ -283,8 +283,8 @@ func _ratings() -> Control:
 		h.add_child(UI.display("%.1f" % r["total"], 28, UI.GOLD))
 		h.add_child(UI.chip(r["grade"], Color(UI.GOLD, 0.2), UI.GOLD, 13))
 		pv.add_child(h)
-		pv.add_child(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f  •  Value %.1f" % [
-			r["batting"], r["bowling"], r["balance"], r["depth"], r["value"]], UI.MUTED, 10))
+		pv.add_child(UI.wrap(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f  •  Value %.1f" % [
+			r["batting"], r["bowling"], r["balance"], r["depth"], r["value"]], UI.MUTED, 10)))
 		if not r["notes"].is_empty():
 			pv.add_child(UI.wrap(UI.label("⚠ " + ", ".join(r["notes"]), 12, UI.soft(UI.RED, 0.25))))
 		v.add_child(p)

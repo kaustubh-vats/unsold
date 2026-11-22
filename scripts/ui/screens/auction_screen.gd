@@ -67,7 +67,15 @@ func _ready() -> void:
 	_build_actions()
 	_build_strip()
 	Game.store.changed.connect(_refresh)
+	# Starring or unstarring the player on the block restyles his card.
+	Game.wishlist_changed.connect(_on_wish_changed)
 	_refresh()
+
+
+func _on_wish_changed() -> void:
+	var p := DB.player(Game.store.auction().get("pid", ""))
+	if not p.is_empty():
+		_show_player(p)
 
 
 # ------------------------------------------------------------------ build
@@ -87,6 +95,7 @@ func _build_header() -> void:
 		if e is InputEventMouseButton and e.button_index == MOUSE_BUTTON_LEFT and not e.pressed:
 			_open_sheet("set"))
 	head.add_child(hv)
+	head.add_child(UI.button("★", func(): _open_sheet("wish"), "icon"))
 	head.add_child(UI.theme_button())
 	head.add_child(UI.sound_button())
 	add_child(head)
@@ -136,7 +145,7 @@ func _build_my_team() -> void:
 
 func _build_card() -> void:
 	card = PanelContainer.new()
-	card.add_theme_stylebox_override("panel", UI.glow(UI.box(UI.GLASS, 20, 14, Color(UI.GOLD, 0.25)), Color(0, 0, 0, 0.12 if UI.light else 0.35), 14))
+	_style_card(false)
 	var cv := UI.vbox(8)
 	card.add_child(cv)
 	var top := UI.hbox(12)
@@ -199,6 +208,14 @@ func _build_card() -> void:
 	banner.add_child(banner_box)
 	card.add_child(banner)
 	add_child(card)
+
+
+## A wishlisted player gets a gold, glowing card.
+func _style_card(wished: bool) -> void:
+	if wished:
+		card.add_theme_stylebox_override("panel", UI.glow(UI.box(Color(UI.GOLD, 0.1), 20, 14, UI.GOLD, 3), Color(UI.GOLD, 0.4), 16))
+	else:
+		card.add_theme_stylebox_override("panel", UI.glow(UI.box(UI.GLASS, 20, 14, Color(UI.GOLD, 0.25)), Color(0, 0, 0, 0.12 if UI.light else 0.35), 14))
 
 
 func _build_bid_panel() -> void:
@@ -382,6 +399,7 @@ func _refresh() -> void:
 		if new_set:
 			_show_banner(Auction.lot_set(s.state), in_set.size())
 		_announce_open(p, Auction.lot_set(s.state) if new_set else "")
+		_wish_alert(pid, lots, int(a.get("idx", 0)))
 		card.pivot_offset = card.size / 2.0
 		card.modulate.a = 0.0
 		var tw := create_tween()
@@ -464,7 +482,8 @@ func _refresh() -> void:
 	if sig != _list_sig:
 		_list_sig = sig
 		nav_btns["log"].text = "SOLD LOG (%d)" % s.state.get("log", {}).size()
-		if open:
+		# The wishlist page has a search box; don't wipe it on every lot.
+		if open and sheet.top_title() != "WISHLIST":
 			sheet.refresh()
 
 
@@ -507,6 +526,10 @@ func _show_player(p: Dictionary) -> void:
 	p_meta.text = "%s  •  %s  •  %s" % [p["country"], DB.role_label(p["role"]), "Capped" if p["capped"] else "Uncapped"]
 	p_ovr.text = str(p["ovr"])
 	UI.clear(p_chips)
+	var wished := Game.is_wished(p["id"])
+	_style_card(wished)
+	if wished:
+		p_chips.add_child(UI.chip("★ WISHLIST", Color(UI.GOLD, 0.25), UI.GOLD, 10))
 	if p["overseas"]:
 		p_chips.add_child(UI.chip("✈ OVERSEAS", Color(UI.BLUE, 0.2), UI.soft(UI.BLUE, 0.4), 10))
 	if TRAITS.has(p["trait"]):
@@ -554,6 +577,19 @@ func _announce_open(p: Dictionary, new_set := "") -> void:
 		# Skip the intro if someone already opened the bidding in the meantime.
 		if is_instance_valid(self) and _lot_key == key and Game.store.auction().get("bidder", "") == "":
 			Sfx.say(line))
+
+
+## Heads-up for wishlist players: one when he's next, a bigger one when he's up.
+func _wish_alert(pid: String, lots: Array, idx: int) -> void:
+	if Game.store.fast_forwarding():
+		return
+	if Game.is_wished(pid):
+		UI.toast(self, "★ Your wishlist player is up: %s" % DB.player(pid)["name"], UI.GOLD)
+		Sfx.play("outbid", -4.0)
+		card.pivot_offset = card.size / 2.0
+		UI.pop(card, 1.04)
+	elif idx + 1 < lots.size() and Game.is_wished(lots[idx + 1]):
+		UI.toast(self, "★ Next up: %s from your wishlist" % DB.player(lots[idx + 1])["name"], UI.GOLD)
 
 
 ## Big "NOW WE HAVE THE CAPPED BATTERS" card over the player while the set is announced.
@@ -693,6 +729,8 @@ func _open_sheet(kind: String) -> void:
 		sheet = Sheet.open(self, _team_title(tid), func(body, _sh): Views.team_page(body, tid))
 	elif kind == "teams":
 		sheet = Sheet.open(self, "ALL FRANCHISES", _fill_teams)
+	elif kind == "wish":
+		sheet = Sheet.open(self, "WISHLIST", Views.wishlist_page)
 	elif kind == "set":
 		sheet = Sheet.open(self, "THIS SET", _fill_set)
 	else:
@@ -737,13 +775,13 @@ func _fill_set(body: VBoxContainer, _sh: Sheet) -> void:
 	if not groups["live"].is_empty():
 		body.add_child(Views.section("ON THE BLOCK"))
 		for e in groups["live"]:
-			body.add_child(Views.player_row(e["pid"], -1, "", {"tag": ["LIVE", UI.GOLD]}))
+			body.add_child(Views.player_row(e["pid"], -1, "", {"tag": ["LIVE", UI.GOLD], "star": Game.is_wished(e["pid"])}))
 	if not groups["next"].is_empty():
 		body.add_child(Views.section("COMING UP", "in auction order"))
 		var i := 1
 		for e in groups["next"]:
 			var p := DB.player(e["pid"])
-			body.add_child(Views.player_row(e["pid"], -1, "", {"num": i, "tag": [DB.fmt_price(int(p["base"])), UI.MUTED],
+			body.add_child(Views.player_row(e["pid"], -1, "", {"num": i, "tag": [DB.fmt_price(int(p["base"])), UI.MUTED], "star": Game.is_wished(e["pid"]),
 				"line": "%s  •  BAT %d  •  BOWL %d  •  base price" % [DB.role_label(p["role"]), p["bat"], p["bowl"]]}))
 			i += 1
 	if not groups["sold"].is_empty():
@@ -751,7 +789,7 @@ func _fill_set(body: VBoxContainer, _sh: Sheet) -> void:
 		var sold: Array = groups["sold"].duplicate()
 		sold.reverse()
 		for e in sold:
-			body.add_child(Views.player_row(e["pid"], int(e["price"]), e["team"]))
+			body.add_child(Views.player_row(e["pid"], int(e["price"]), e["team"], {"star": Game.is_wished(e["pid"])}))
 	if not groups["unsold"].is_empty():
 		body.add_child(Views.section("UNSOLD", str(groups["unsold"].size())))
 		for e in groups["unsold"]:

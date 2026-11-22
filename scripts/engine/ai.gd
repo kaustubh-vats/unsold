@@ -58,31 +58,96 @@ static func most_needed_role(team: Dictionary) -> String:
 	return best
 
 
+## Each franchise bids like its real-life counterpart. Fixed per team; every
+## game adds a little jitter on top (see strategy()), so they're recognisable
+## but not predictable to the lakh.
+##   mix:       their ideal squad vs TARGET (e.g. +2 spinners, −2 seamers)
+##   roles / traits: how much they rate each role and speciality
+##   star:      + pays up for stars, − spreads the money for depth
+##   overseas:  appetite for overseas players
+##   uncapped:  appetite for uncapped (young, unproven) players
+##   indian_star: extra for capped Indian stars (ovr ≥ 86)
+##   early:     > 1 spends in the first half of the auction, < 1 saves for later
+##   accel:     appetite in the accelerated round (late bargains)
+##   need:      how strictly they buy for gaps in the squad
+##   picky:     chance of sitting a lot out (× difficulty skip)
+##   cap_star / cap: most of the purse on one star / on anyone else
+##   aggr:      overall willingness to pay
+##   war:       stubbornness in a long bidding war (0 calm .. 1 never backs down)
+##   erratic:   how far their valuations swing (× difficulty noise)
+const PERSONAS := {
+	"CHE": {"label": "The Old Guard", "blurb": "Calm, loyal and patient. Builds around spin and all-rounders, trusts experience over potential and rarely panics in a bidding war.",
+		"mix": {"SPIN": 2, "AR": 1, "PACE": -2, "BAT": -1}, "roles": {"SPIN": 1.35, "AR": 1.25, "PACE": 0.9}, "traits": {"anc": 1.12, "fin": 1.15},
+		"star": 0.1, "uncapped": 0.82, "picky": 0.9, "aggr": 0.96, "war": 0.25, "cap": 0.14},
+	"MUM": {"label": "The Talent Scouts", "blurb": "Disciplined and data-driven. Hunts fast bowlers and cheap uncapped Indians, and walks away once the price is wrong.",
+		"mix": {"PACE": 2, "SPIN": -1, "AR": -1}, "roles": {"PACE": 1.25}, "traits": {"pp": 1.1, "dth": 1.15},
+		"star": 0.2, "uncapped": 1.25, "aggr": 1.0, "war": 0.45, "cap": 0.13, "erratic": 0.8},
+	"BLR": {"label": "The Star Chasers", "blurb": "Goes after the biggest names, especially batters. Will put up to a quarter of the purse on one star.",
+		"mix": {"BAT": 2, "AR": -1, "SPIN": -1}, "roles": {"BAT": 1.25, "WK": 1.05, "SPIN": 0.9}, "traits": {"anc": 1.08},
+		"star": 0.9, "uncapped": 0.85, "aggr": 1.1, "war": 0.7, "cap_star": 0.25},
+	"KOL": {"label": "The All-In Gamblers", "blurb": "The boldest room at the table. Loves overseas all-rounders and mystery spin, and drags bidding wars to record prices.",
+		"mix": {"AR": 2, "SPIN": 1, "BAT": -2, "PACE": -1}, "roles": {"AR": 1.2, "SPIN": 1.15, "BAT": 0.95}, "overseas": 1.2,
+		"star": 0.5, "aggr": 1.2, "war": 0.9, "cap_star": 0.27, "cap": 0.18},
+	"HYD": {"label": "The Powerplay Pirates", "blurb": "All about explosive openers and overseas pace. Patient early, then pounces on bargains late and in the accelerated round.",
+		"mix": {"BAT": 1, "PACE": 1, "AR": -2}, "roles": {"PACE": 1.1}, "traits": {"op": 1.25, "pp": 1.15}, "overseas": 1.1,
+		"early": 0.94, "accel": 1.3, "aggr": 1.0, "war": 0.55},
+	"DEL": {"label": "The Rebuilders", "blurb": "Value hunters who back Indian and uncapped talent, spread the money evenly and avoid blowing it on one name.",
+		"overseas": 0.9, "uncapped": 1.15, "star": -0.5, "picky": 0.8, "aggr": 0.95, "war": 0.35, "cap_star": 0.17, "cap": 0.13},
+	"PUN": {"label": "The Big Spenders", "blurb": "Splashes the cash early and often, sometimes on the wrong player. Unpredictable and hard to outbid when they want someone.",
+		"early": 1.2, "accel": 0.8, "star": 0.4, "aggr": 1.15, "war": 0.8, "erratic": 1.6, "picky": 1.2},
+	"JAI": {"label": "Moneyball", "blurb": "Analytics first. Backs uncapped youngsters and spinners, avoids overpriced stars and saves money for late bargains.",
+		"mix": {"SPIN": 2, "PACE": -1, "BAT": -1}, "roles": {"SPIN": 1.2}, "uncapped": 1.25, "star": -0.7, "early": 0.85, "accel": 1.35,
+		"aggr": 0.9, "war": 0.25, "cap_star": 0.16},
+	"AHM": {"label": "The Gap Fillers", "blurb": "Plans the XI first, then buys exactly what's missing. Loves bowlers and death specialists and rarely overpays.",
+		"mix": {"PACE": 1, "SPIN": 1, "BAT": -2}, "roles": {"PACE": 1.1, "SPIN": 1.1, "BAT": 0.95}, "traits": {"dth": 1.2},
+		"star": -0.3, "need": 1.35, "aggr": 0.95, "war": 0.35, "cap": 0.13},
+	"LKO": {"label": "The Record Breakers", "blurb": "Willing to break the bank for one Indian star, then stacks all-rounders. Bold and a little erratic.",
+		"mix": {"AR": 2, "BAT": -1, "PACE": -1}, "roles": {"AR": 1.15}, "indian_star": 1.25, "star": 0.7, "aggr": 1.05, "war": 0.75,
+		"erratic": 1.4, "cap_star": 0.27},
+}
+const PERSONA_DEFAULT := {"label": "Balanced", "blurb": "No fixed plan: rates every role about the same."}
+
+
+## The franchise's real-life style (label + blurb for the UI).
+static func persona(tid: String) -> Dictionary:
+	return PERSONAS.get(tid, PERSONA_DEFAULT)
+
+
 ## Team personality: a stable aggression multiplier per team per game.
 static func aggression(seed: int, tid: String) -> float:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s" % [seed, tid])
-	return rng.randf_range(0.82, 1.22)
+	return float(persona(tid).get("aggr", 1.0)) * rng.randf_range(0.94, 1.06)
 
 
-## A team's plan for this auction, different every game: which roles it rates
-## (one side builds around spin, another hoards pace), whether it chases stars
-## or spreads the money, how it treats overseas players, whether it spends
-## early or keeps powder dry, and how picky it is.
+static func _jit(pr: Dictionary, k: String, d: float, spread: float, rng: RandomNumberGenerator) -> float:
+	return float(pr.get(k, d)) * rng.randf_range(1.0 - spread, 1.0 + spread)
+
+
+## A team's plan for this auction: its persona plus a little per-game jitter.
 static func strategy(seed: int, tid: String) -> Dictionary:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|plan|%s" % [seed, tid])
+	var pr := persona(tid)
+	var pr_roles: Dictionary = pr.get("roles", {})
 	var roles := {}
 	for r in TARGET:
-		roles[r] = rng.randf_range(0.82, 1.22)
+		roles[r] = float(pr_roles.get(r, 1.0)) * rng.randf_range(0.94, 1.06)
 	return {
 		"roles": roles,
-		"star": rng.randf_range(-0.9, 0.9),     # + = pays up for stars, − = values depth
-		"overseas": rng.randf_range(0.85, 1.15),
-		"early": rng.randf_range(0.85, 1.15),   # > 1 spends early, < 1 saves for later
-		"picky": rng.randf_range(0.6, 1.5),     # scales the chance of sitting a lot out
-		"cap_star": rng.randf_range(0.15, 0.27), # most of the purse it will put on one star
-		"cap": rng.randf_range(0.11, 0.19),      # ...and on anyone else
+		"traits": pr.get("traits", {}),
+		"star": clampf(float(pr.get("star", 0.0)) + rng.randf_range(-0.15, 0.15), -0.95, 0.95),
+		"overseas": _jit(pr, "overseas", 1.0, 0.04, rng),
+		"uncapped": _jit(pr, "uncapped", 1.0, 0.04, rng),
+		"indian_star": float(pr.get("indian_star", 1.0)),
+		"early": _jit(pr, "early", 1.0, 0.03, rng),
+		"accel": _jit(pr, "accel", 1.0, 0.05, rng),
+		"need": float(pr.get("need", 1.0)),
+		"picky": _jit(pr, "picky", 1.0, 0.15, rng),
+		"cap_star": _jit(pr, "cap_star", 0.21, 0.08, rng),
+		"cap": _jit(pr, "cap", 0.15, 0.08, rng),
+		"war": float(pr.get("war", 0.5)),
+		"erratic": float(pr.get("erratic", 1.0)),
 	}
 
 
@@ -96,30 +161,39 @@ static func hype(seed: int, pid: String) -> float:
 
 ## The maximum this AI team is willing to pay for the player (lakh).
 ## Deterministic for (seed, team, player, squad state) so a new host behaves the same.
-static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium") -> int:
+static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium", rnd := 1) -> int:
 	var lv := level(diff)
 	var plan := strategy(seed, tid)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash("%d|%s|%s" % [seed, tid, p["id"]])
 	var v := market_value(p, float(lv["spread"]) - float(plan["star"])) * float(lv["value"])
 	v *= hype(seed, p["id"]) * float(plan["roles"][p["role"]])
+	v *= float(plan["traits"].get(p["trait"], 1.0))
 	if p["overseas"]:
 		v *= float(plan["overseas"])
-	v *= float(plan["early"]) if lots_left > 120 else 2.0 - float(plan["early"])
+	elif p["ovr"] >= 86 and p["capped"]:
+		v *= float(plan["indian_star"])
+	if not p["capped"]:
+		v *= float(plan["uncapped"])
+	if rnd >= 2:
+		v *= float(plan["accel"])
+	else:
+		v *= float(plan["early"]) if lots_left > 120 else 2.0 - float(plan["early"])
 	var count := Rules.squad_count(team)
 	var counts := role_counts(team)
 	var role: String = p["role"]
 	# Role need.
 	var have: int = counts[role]
-	var want: int = TARGET[role]
+	var want: int = TARGET[role] + int(persona(tid).get("mix", {}).get(role, 0))
+	var need := float(plan["need"])   # gap fillers lean harder into squad needs
 	if have < want / 2:
-		v *= 1.35
+		v *= 1.0 + 0.35 * need
 	elif have < want:
-		v *= 1.1
+		v *= 1.0 + 0.1 * need
 	elif have == want:
-		v *= 0.6
+		v *= pow(0.6, need)
 	else:
-		v *= 0.3
+		v *= pow(0.3, need)
 	# Wicket-keeper essential.
 	if role == "WK" and have == 0:
 		v *= 1.25
@@ -140,7 +214,8 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	if short > 0 and lots_left < short * 4:
 		v *= 1.3
 	# Personality and noise.
-	v *= aggression(seed, tid) * rng.randf_range(lv["noise"][0], lv["noise"][1])
+	var er := float(plan["erratic"])
+	v *= aggression(seed, tid) * (1.0 + (rng.randf_range(lv["noise"][0], lv["noise"][1]) - 1.0) * er)
 	# Budget discipline (applied last): don't blow too much on one player,
 	# and never beyond a realistic record price.
 	var purse := float(team.get("purse", 0))
@@ -171,6 +246,8 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator, jump :=
 	var seed := int(state.get("meta", {}).get("seed", 1))
 	var lots_left: int = (a.get("lots", []) as Array).size() - int(a.get("idx", 0))
 	var diff := str(state.get("meta", {}).get("settings", {}).get("difficulty", "medium"))
+	var rnd := int(a.get("round", 1))
+	var n := int(a.get("n", 0))
 	var candidates := []
 	var teams: Dictionary = state.get("teams", {})
 	for tid in teams:
@@ -179,9 +256,14 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator, jump :=
 			continue
 		if not Rules.can_bid(t, p, amount):
 			continue
-		var val := valuation(t, tid, p, seed, lots_left, diff)
+		var val := valuation(t, tid, p, seed, lots_left, diff, rnd)
 		if val >= amount:
 			candidates.append([tid, val])
+		elif val > 0 and n >= 3:
+			# Caught up in a bidding war: stubborn rooms go a step past their limit.
+			var war := float(strategy(seed, tid)["war"])
+			if float(val) * (1.0 + 0.15 * war) >= amount and rng.randf() < war * 0.6:
+				candidates.append([tid, amount])
 	if candidates.is_empty():
 		return {}
 	if not jump:

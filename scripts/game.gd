@@ -3,12 +3,15 @@ extends Node
 
 signal screen_requested(screen: String)
 signal theme_changed
+signal wishlist_changed
 
 const PROFILE := "user://profile.cfg"
+const WISHLIST := "user://wishlist.cfg"
 
 var player_name := ""
 var store: RoomStore = null
 var results_cache := {}   # memoized season/score results by key
+var wishlist := {}        # {pid: true}: players you starred to watch for (this device only)
 
 
 func _ready() -> void:
@@ -18,6 +21,11 @@ func _ready() -> void:
 	var cfg := ConfigFile.new()
 	if cfg.load(PROFILE) == OK:
 		player_name = cfg.get_value("profile", "name", "")
+	var wl := ConfigFile.new()
+	if wl.load(WISHLIST) == OK:
+		for pid in wl.get_value("wishlist", "players", []):
+			if not DB.player(pid).is_empty():
+				wishlist[pid] = true
 	Firebase.auth_changed.connect(_on_auth_changed)
 	# Restore a saved login in the background (no-op if never signed in).
 	if Firebase.is_configured():
@@ -35,6 +43,32 @@ func save_name(n: String) -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("profile", "name", player_name)
 	cfg.save(PROFILE)
+
+
+func is_wished(pid: String) -> bool:
+	return wishlist.has(pid)
+
+
+## Star or unstar a player; returns whether he's starred now.
+func toggle_wish(pid: String) -> bool:
+	if wishlist.has(pid):
+		wishlist.erase(pid)
+	else:
+		wishlist[pid] = true
+	_save_wishlist()
+	return wishlist.has(pid)
+
+
+func clear_wishlist() -> void:
+	wishlist.clear()
+	_save_wishlist()
+
+
+func _save_wishlist() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("wishlist", "players", wishlist.keys())
+	cfg.save(WISHLIST)
+	wishlist_changed.emit()
 
 
 func toggle_theme() -> void:

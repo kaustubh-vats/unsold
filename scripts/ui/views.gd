@@ -64,7 +64,7 @@ static func player_row(pid: String, price: int, tid := "", opts := {}) -> Contro
 	h.add_child(UI.role_icon(p["role"], 28))
 	var nv := UI.vbox(-2)
 	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var n := UI.label(p["name"] + ("  ✈" if p["overseas"] else ""), 14, UI.TEXT, true)
+	var n := UI.label(("★ " if opts.get("star", false) else "") + p["name"] + ("  ✈" if p["overseas"] else ""), 14, UI.GOLD if opts.get("star", false) else UI.TEXT, true)
 	n.clip_text = true
 	nv.add_child(n)
 	var sub: String = opts.get("line", "%s  •  BAT %d  •  BOWL %d" % [DB.role_label(p["role"]), p["bat"], p["bowl"]])
@@ -114,6 +114,15 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 		rv.add_child(UI.chip(rating["grade"], Color(UI.GOLD, 0.2), UI.GOLD, 11))
 		top.add_child(rv)
 	hv.add_child(top)
+	if t.get("ai", false):
+		# How this AI room bids (modelled on its real-life franchise).
+		var pr := AI.persona(tid)
+		var pv := UI.vbox(4)
+		var ch := UI.chip("STYLE: " + str(pr["label"]).to_upper(), Color(UI.GOLD, 0.18), UI.GOLD, 11)
+		ch.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		pv.add_child(ch)
+		pv.add_child(UI.wrap(UI.label(pr["blurb"], 13, UI.MUTED)))
+		hv.add_child(pv)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 10)
@@ -139,13 +148,13 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 	hv.add_child(grid)
 	hv.add_child(purse_bar(purse))
 	if not rating.is_empty():
-		hv.add_child(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f" % [
-			rating["batting"], rating["bowling"], rating["balance"], rating["depth"]], UI.MUTED, 10))
+		hv.add_child(UI.wrap(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f" % [
+			rating["batting"], rating["bowling"], rating["balance"], rating["depth"]], UI.MUTED, 10)))
 		if not rating["notes"].is_empty():
 			hv.add_child(UI.wrap(UI.label("⚠ " + ", ".join(rating["notes"]), 12, UI.soft(UI.RED, 0.25))))
 	var short := Rules.MIN_SQUAD - squad.size()
 	if short > 0 and xi.is_empty():
-		hv.add_child(UI.label("Needs %d more player%s to reach the minimum of %d." % [short, "" if short == 1 else "s", Rules.MIN_SQUAD], 12, UI.MUTED))
+		hv.add_child(UI.wrap(UI.label("Needs %d more player%s to reach the minimum of %d." % [short, "" if short == 1 else "s", Rules.MIN_SQUAD], 12, UI.MUTED)))
 	body.add_child(hero)
 	body.add_child(UI.caption("Role balance (have / ideal)", UI.MUTED, 10))
 	var counts := AI.role_counts(t)
@@ -536,3 +545,135 @@ static func _feat_row(tid: String, name: String, sub: String, value: String, cb:
 	h.add_child(nv)
 	h.add_child(UI.display(value, 24, UI.GOLD))
 	return fill_tap(card, h)
+
+
+# ------------------------------------------------------------------ wishlist
+
+## Where a starred player stands in the current auction:
+## {kind: "sold"|"live"|"next"|"unsold"|"", team, price, in, set}.
+static func wish_status(pid: String) -> Dictionary:
+	var s := Game.store
+	if s == null or not is_instance_valid(s):
+		return {"kind": ""}
+	var state: Dictionary = s.state
+	var sold := Auction.sold_ids(state)
+	if sold.has(pid):
+		var tid: String = sold[pid]
+		return {"kind": "sold", "team": tid, "price": int(state["teams"][tid]["squad"][pid])}
+	if s.status() != "auction":
+		return {"kind": "unsold" if s.status() in ["review", "results"] else ""}
+	var a: Dictionary = state.get("auction", {})
+	var lots: Array = a.get("lots", [])
+	var idx := int(a.get("idx", 0))
+	var rnd := int(a.get("round", 1))
+	if a.get("pid", "") == pid and a.get("phase", "") == "bidding":
+		return {"kind": "live"}
+	var i := lots.find(pid)
+	if i > idx:
+		return {"kind": "next", "in": i - idx, "set": Auction.set_label(Auction.set_at(lots, i, rnd))}
+	return {"kind": "unsold", "again": rnd == 1}
+
+
+static func _wish_tag(st: Dictionary) -> Array:
+	match st.get("kind", ""):
+		"sold":
+			var mine: bool = st["team"] == Game.store.my_team()
+			return ["%s %s" % ["YOURS" if mine else DB.team_short(st["team"]), DB.fmt_price(st["price"])], UI.GREEN if mine else UI.MUTED]
+		"live": return ["ON NOW", UI.GOLD]
+		"next": return ["IN %d" % st["in"] if st["in"] > 1 else "NEXT", UI.TEXT]
+		"unsold": return ["UNSOLD", UI.RED]
+	return []
+
+
+## One tappable row with a star toggle. tag: [text, color] shown on the right.
+static func _wish_row(pid: String, on_toggle: Callable, tag := [], line := "") -> Control:
+	var p := DB.player(pid)
+	var star := UI.label("★", 26, UI.GOLD if Game.is_wished(pid) else UI.ink(0.18))
+	star.custom_minimum_size.x = 28
+	var row := UI.tap_panel(UI.box(UI.ink(0.04), 12, 10), func():
+		var on := Game.toggle_wish(pid)
+		star.add_theme_color_override("font_color", UI.GOLD if on else UI.ink(0.18))
+		UI.pop(star, 1.3)
+		on_toggle.call())
+	var h := UI.hbox(10)
+	h.add_child(star)
+	h.add_child(UI.role_icon(p["role"], 28))
+	var nv := UI.vbox(-2)
+	nv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var n := UI.label(p["name"] + ("  ✈" if p["overseas"] else ""), 14, UI.TEXT, true)
+	n.clip_text = true
+	nv.add_child(n)
+	if line == "":
+		line = "%s  •  BAT %d  •  BOWL %d  •  BASE %s" % [DB.role_label(p["role"]), p["bat"], p["bowl"], DB.fmt_price(int(p["base"]))]
+	var sl := UI.caption(line, UI.DIM, 9)
+	sl.clip_text = true
+	nv.add_child(sl)
+	h.add_child(nv)
+	h.add_child(UI.display(str(p["ovr"]), 22, UI.MUTED))
+	if not tag.is_empty():
+		var tg := UI.display(str(tag[0]), 17, tag[1])
+		tg.custom_minimum_size.x = 64
+		tg.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		h.add_child(tg)
+	return UI.fill_tap(row, h)
+
+
+## The wishlist page: search, filter and star players. The ★ filter shows your
+## starred players and, once the auction is on, where each one stands.
+static func wishlist_page(body: VBoxContainer, sheet: Sheet) -> void:
+	var hero := UI.panel(Color(UI.GOLD, 0.1), 16, 12, Color(UI.GOLD, 0.5))
+	var hv := UI.vbox(4)
+	hero.add_child(hv)
+	var top := UI.hbox(8)
+	var count := UI.display("", 28, UI.GOLD)
+	count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(count)
+	top.add_child(UI.small_button("CLEAR ALL", func():
+		Game.clear_wishlist()
+		sheet.refresh()))
+	hv.add_child(top)
+	hv.add_child(UI.wrap(UI.label("Star the players you're after. You'll get a heads-up when one is next and a gold card when he's up. Only you can see this list.", 12, UI.MUTED)))
+	body.add_child(hero)
+	var set_count := func(): count.text = "★ %d STARRED" % Game.wishlist.size()
+	set_count.call()
+
+	var search := LineEdit.new()
+	search.placeholder_text = "Search players…"
+	search.custom_minimum_size.y = 46
+	search.add_theme_font_size_override("font_size", 16)
+	search.clear_button_enabled = true
+	body.add_child(search)
+	var filt := {"role": "STAR" if not Game.wishlist.is_empty() else "ALL"}
+	var list := UI.vbox(6)
+	var fill_list := func():
+		UI.clear(list)
+		var q := search.text.strip_edges().to_lower()
+		var stars: bool = filt["role"] == "STAR"
+		var ids: Array = Game.wishlist.keys() if stars else DB.all_ids()
+		ids.sort_custom(func(x, y): return DB.player(x)["ovr"] > DB.player(y)["ovr"])
+		var shown := 0
+		for pid in ids:
+			var p := DB.player(pid)
+			if not stars and filt["role"] != "ALL" and p["role"] != filt["role"]:
+				continue
+			if q != "" and not String(p["name"]).to_lower().contains(q):
+				continue
+			var st := wish_status(pid)
+			# Already-sold players can't be chased any more; keep them only in ★.
+			if not stars and st.get("kind", "") == "sold":
+				continue
+			var line := ""
+			if st.get("kind", "") == "next":
+				line = "%s  •  %s set" % [DB.role_label(p["role"]), st["set"]]
+			list.add_child(_wish_row(pid, set_count, _wish_tag(st), line))
+			shown += 1
+		if shown == 0:
+			var msg := "No starred players yet — pick a role above and tap the stars." if stars and q == "" else "No players match."
+			list.add_child(UI.wrap(UI.label(msg, 14, UI.MUTED)))
+	body.add_child(UI.segmented(["★", "All", "BAT", "WK", "AR", "PACE", "SPIN"], ["STAR", "ALL", "BAT", "WK", "AR", "PACE", "SPIN"], filt["role"],
+		func(v):
+			filt["role"] = v
+			fill_list.call()))
+	search.text_changed.connect(func(_t): fill_list.call())
+	body.add_child(list)
+	fill_list.call()
