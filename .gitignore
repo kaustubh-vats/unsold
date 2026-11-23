@@ -36,3 +36,6 @@ Thumbs.db
 /android_plugin/plugin/build/
 /android_plugin/local.properties
 config.local.gd.uid
+
+# Firebase CLI logs
+*-debug.log
