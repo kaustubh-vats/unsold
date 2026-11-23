@@ -307,3 +307,101 @@ func test_stronger_team_wins_more() -> void:
 	var s := Score.rate({"squad": {}, "purse": 0}, strong)
 	var w := Score.rate({"squad": {}, "purse": 0}, weak)
 	ok(s["total"] > w["total"], "team score ranks strong above weak")
+
+
+func test_ff_vote() -> void:
+	var now := 1000000
+	var st := {
+		"meta": {"online": true},
+		"players": {
+			"a": {"team": "CHE", "seen": now},
+			"b": {"team": "MUM", "seen": now},
+			"c": {"team": "BLR", "seen": now - 60000},  # dropped out
+		},
+		"teams": {"CHE": {}, "MUM": {}, "BLR": {}, "KOL": {"ai": true}},
+		"auction": {"ff": {}},
+	}
+	ok(Auction.ff_votes(st, now) == [0, 2], "offline player not counted")
+	ok(not Auction.ff_agreed(st, now), "no votes, no skip")
+	st["auction"]["ff"]["CHE"] = true
+	ok(not Auction.ff_agreed(st, now), "one of two votes is not enough")
+	st["auction"]["ff"]["MUM"] = true
+	ok(Auction.ff_agreed(st, now), "all connected humans voted")
+	st["players"]["c"]["seen"] = now
+	ok(not Auction.ff_agreed(st, now), "player back online must vote too")
+
+
+func test_deal_verdict() -> void:
+	var ids: Array = DB.all_ids()
+	ids.sort_custom(func(x, y): return DB.player(x)["ovr"] > DB.player(y)["ovr"])
+	var star := DB.player(ids[0])
+	var mv: float = AI.deal(star, 100)["fair"]
+	ok(AI.deal(star, int(mv * 0.3))["key"] == "steal", "star at 0.3x is a steal")
+	ok(AI.deal(star, int(mv))["key"] == "fair", "star at market value is fair")
+	ok(AI.deal(star, int(mv * 2.2))["key"] == "overpaid", "star at 2.2x is overpaid")
+	var low := DB.player(ids[ids.size() - 1])
+	ok(AI.deal(low, int(low["base"]))["key"] != "steal", "fringe player at base is not a steal")
+
+
+func test_mini_auction() -> void:
+	for cfg in [[50, 3], [80, 9], [150, 5]]:
+		var n: int = cfg[0]
+		var seed: int = cfg[1]
+		var plan := Auction.mini_plan(n, 1, true)
+		var pool := Auction.mini_pool(seed, plan["n"], plan["teams"])
+		ok(pool.size() == plan["n"], "mini %d: pool size %d" % [n, pool.size()])
+		var uniq := {}
+		for id in pool:
+			uniq[id] = true
+		ok(uniq.size() == pool.size(), "mini %d: no duplicate players" % n)
+		var state := {"meta": {"host": "x", "status": "lobby", "seed": seed,
+			"settings": {"timer": 10, "ai_fill": true, "win_mode": "season", "difficulty": "medium",
+				"mode": "mini", "mini_n": n}},
+			"players": {"x": {"team": "CHE", "name": "T"}}}
+		var now := 0
+		Auction.apply_updates(state, Auction.start_updates(state, now))
+		state["teams"]["CHE"]["ai"] = true   # let the AI play the human seat too
+		ok(state["teams"].size() == plan["teams"], "mini %d: %d teams" % [n, state["teams"].size()])
+		ok(state["auction"]["lots"].size() == plan["n"], "mini %d: lots = pool" % n)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed
+		var guard := 0
+		while state["meta"]["status"] == "auction" and guard < 20000:
+			guard += 1
+			var a: Dictionary = state["auction"]
+			if a["phase"] == "bidding":
+				var c := AI.choose_bidder(state, rng)
+				if c.is_empty():
+					Auction.apply_updates(state, Auction.settle_updates(state, now))
+				else:
+					now += 400
+					state["auction"] = Auction.apply_bid(a, c["team"], c["amount"], state["teams"][c["team"]], now, 10000)
+			else:
+				now = int(a["ends"])
+				Auction.apply_updates(state, Auction.advance_updates(state, now))
+		ok(state["meta"]["status"] == "review", "mini %d finished" % n)
+		var top := 0
+		var spent := 0
+		for tid in state["teams"]:
+			var t: Dictionary = state["teams"][tid]
+			var c2 := Rules.squad_count(t)
+			ok(c2 >= plan["min"] and c2 <= plan["max"], "mini %d %s squad %d (%d-%d)" % [n, tid, c2, plan["min"], plan["max"]])
+			ok(Rules.overseas_count(t) <= plan["os"], "mini %d %s overseas" % [n, tid])
+			ok(XI.problems(t["xi"], t["squad"].keys()).is_empty(), "mini %d %s XI ok" % [n, tid])
+			for pid in t["squad"]:
+				ok(uniq.has(pid), "mini %d: %s bought from the pool" % [n, pid])
+				top = maxi(top, int(t["squad"][pid]))
+			spent += plan["purse"] - int(t["purse"])
+		var share: float = float(spent) / (plan["purse"] * state["teams"].size())
+		print("    mini %d: %d teams, squads %d-%d, purse %s, os %d, top %s, spent %d%%" % [n, plan["teams"], plan["min"], plan["max"],
+			DB.fmt_price(plan["purse"]), plan["os"], DB.fmt_price(top), roundi(share * 100)])
+		ok(share > 0.6, "mini %d: teams spend most of the purse (%d%%)" % [n, roundi(share * 100)])
+		var season := Sim.season(_xis(state), seed)
+		ok(season["champion"] != "", "mini %d: season has a champion" % n)
+
+
+func _xis(state: Dictionary) -> Dictionary:
+	var out := {}
+	for tid in state["teams"]:
+		out[tid] = state["teams"][tid]["xi"]
+	return out

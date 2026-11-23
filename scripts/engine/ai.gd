@@ -39,6 +39,38 @@ static func market_value(p: Dictionary, spread := 9.5) -> float:
 	return maxf(v, float(p["base"]))
 
 
+## Verdict on a sale: price against the player's market value. Bands follow
+## what AI auctions actually pay (median ≈ 1.0× market value; about 1 in 10
+## buys go under half of it, about 1 in 14 at over 1.7×).
+## Returns {key, label, fair (lakh), ratio}; key is steal|bargain|fair|pricey|overpaid.
+static func deal(p: Dictionary, price: int) -> Dictionary:
+	# Market value tracks the median sale price at each rating; the very top
+	# players top out around ₹25 Cr however good they are.
+	var fair := minf(market_value(p), 2500.0)
+	var ratio := float(price) / fair
+	var at_base := price <= int(p["base"])
+	var key := "fair"
+	if at_base and fair <= float(p["base"]) * 1.1:
+		key = "fair"          # bought at base, and that's all he's worth
+	elif ratio < (0.35 if at_base else 0.5):
+		key = "steal"         # a base-price pickup has to be a real gem to count
+	elif ratio < 0.5:
+		key = "bargain"
+	elif ratio < 0.8:
+		key = "bargain"
+	elif ratio <= 1.25:
+		key = "fair"
+	elif ratio <= 1.7:
+		key = "pricey"
+	else:
+		key = "overpaid"
+	var labels := {"steal": "STEAL DEAL", "bargain": "GOOD VALUE", "fair": "FAIR PRICE",
+		"pricey": "BIT PRICEY", "overpaid": "OVERPAID"}
+	# Round the fair value to a price the auction actually uses (5 L / 25 L steps).
+	var step := 25.0 if fair >= 100.0 else 5.0
+	return {"key": key, "label": labels[key], "fair": int(roundf(fair / step) * step), "ratio": ratio}
+
+
 static func role_counts(team: Dictionary) -> Dictionary:
 	var c := {"BAT": 0, "WK": 0, "AR": 0, "PACE": 0, "SPIN": 0}
 	for pid in team.get("squad", {}):
@@ -46,12 +78,25 @@ static func role_counts(team: Dictionary) -> Dictionary:
 	return c
 
 
+## Ideal role mix for this team's squad size: TARGET in a full auction,
+## scaled down for a mini auction's smaller squads.
+static func targets(team: Dictionary) -> Dictionary:
+	if not team.has("lim"):
+		return TARGET
+	var f := (Rules.min_squad(team) + Rules.max_squad(team)) / 2.0 / 21.5
+	var out := {}
+	for r in TARGET:
+		out[r] = maxi(1, roundi(TARGET[r] * f))
+	return out
+
+
 static func most_needed_role(team: Dictionary) -> String:
 	var c := role_counts(team)
+	var tg := targets(team)
 	var best := "BAT"
 	var gap := -99.0
-	for r in TARGET:
-		var g: float = float(TARGET[r] - c[r]) / float(TARGET[r])
+	for r in tg:
+		var g: float = float(tg[r] - c[r]) / float(tg[r])
 		if g > gap:
 			gap = g
 			best = r
@@ -161,7 +206,7 @@ static func hype(seed: int, pid: String) -> float:
 
 ## The maximum this AI team is willing to pay for the player (lakh).
 ## Deterministic for (seed, team, player, squad state) so a new host behaves the same.
-static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium", rnd := 1) -> int:
+static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, lots_left: int, diff := "medium", rnd := 1, lots_total := 214) -> int:
 	var lv := level(diff)
 	var plan := strategy(seed, tid)
 	var rng := RandomNumberGenerator.new()
@@ -178,13 +223,17 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	if rnd >= 2:
 		v *= float(plan["accel"])
 	else:
-		v *= float(plan["early"]) if lots_left > 120 else 2.0 - float(plan["early"])
+		v *= float(plan["early"]) if lots_left > lots_total * 0.56 else 2.0 - float(plan["early"])
 	var count := Rules.squad_count(team)
 	var counts := role_counts(team)
 	var role: String = p["role"]
 	# Role need.
 	var have: int = counts[role]
-	var want: int = TARGET[role] + int(persona(tid).get("mix", {}).get(role, 0))
+	var tg := targets(team)
+	var mixv := int(persona(tid).get("mix", {}).get(role, 0))
+	if team.has("lim"):
+		mixv = roundi(mixv * float(tg[role]) / float(TARGET[role]))
+	var want: int = maxi(1, tg[role] + mixv)
 	var need := float(plan["need"])   # gap fillers lean harder into squad needs
 	if have < want / 2:
 		v *= 1.0 + 0.35 * need
@@ -200,17 +249,17 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	# Overseas slot pressure.
 	if p["overseas"]:
 		var os := Rules.overseas_count(team)
-		if os >= Rules.MAX_OVERSEAS:
+		if os >= Rules.max_overseas(team):
 			return 0
-		if os >= 6:
+		if os >= Rules.max_overseas(team) - 2:
 			v *= 0.7
 	# Squad size pressure.
-	if count >= 22:
+	if count >= Rules.max_squad(team) - 3:
 		v *= 0.45
-	elif count >= Rules.MIN_SQUAD:
+	elif count >= Rules.min_squad(team):
 		v *= 0.75
 	# Late auction desperation if short of players.
-	var short := Rules.MIN_SQUAD - count
+	var short := Rules.min_squad(team) - count
 	if short > 0 and lots_left < short * 4:
 		v *= 1.3
 	# Personality and noise.
@@ -219,7 +268,7 @@ static func valuation(team: Dictionary, tid: String, p: Dictionary, seed: int, l
 	# Budget discipline (applied last): don't blow too much on one player,
 	# and never beyond a realistic record price.
 	var purse := float(team.get("purse", 0))
-	var slots := float(maxi(1, Rules.MIN_SQUAD - count))
+	var slots := float(maxi(1, Rules.min_squad(team) - count))
 	var cap := purse * (float(plan["cap_star"]) if p["ovr"] >= 88 else float(plan["cap"]))
 	if slots <= 3:
 		cap = purse * 0.6
@@ -245,6 +294,7 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator, jump :=
 	var amount := Auction.current_next(state)
 	var seed := int(state.get("meta", {}).get("seed", 1))
 	var lots_left: int = (a.get("lots", []) as Array).size() - int(a.get("idx", 0))
+	var lots_total: int = Auction.pool_ids(state).size()
 	var diff := str(state.get("meta", {}).get("settings", {}).get("difficulty", "medium"))
 	var rnd := int(a.get("round", 1))
 	var n := int(a.get("n", 0))
@@ -256,7 +306,7 @@ static func choose_bidder(state: Dictionary, rng: RandomNumberGenerator, jump :=
 			continue
 		if not Rules.can_bid(t, p, amount):
 			continue
-		var val := valuation(t, tid, p, seed, lots_left, diff, rnd)
+		var val := valuation(t, tid, p, seed, lots_left, diff, rnd, lots_total)
 		if val >= amount:
 			candidates.append([tid, val])
 		elif val > 0 and n >= 3:

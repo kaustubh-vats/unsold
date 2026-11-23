@@ -137,8 +137,10 @@ func place_bid(tid: String, amount: int) -> String:
 	return "" if ok else "Outbid — try again"
 
 
-## Single player: skip to the end of the current lot. The AI settles its bidding
-## war in one jump and the hammer falls straight away.
+## Skip to the end of the current lot. The AI settles its bidding war in one
+## jump and the hammer falls straight away. Single player: instant. Online:
+## a vote; it kicks in once every connected human has tapped it (tap again to
+## take your vote back).
 var ff_lot := ""
 
 
@@ -150,9 +152,17 @@ func lot_key() -> String:
 func fast_forward() -> void:
 	if not is_online():
 		ff_lot = lot_key()
+		return
+	var tid := my_team()
+	if tid == "" or fast_forwarding():
+		return
+	var voted: bool = auction().get("ff", {}).has(tid)
+	await write({"auction/ff/" + tid: null if voted else true})
 
 
 func fast_forwarding() -> bool:
+	if is_online():
+		return Auction.ff_agreed(state, now_ms())
 	return ff_lot != "" and ff_lot == lot_key()
 
 
@@ -171,7 +181,7 @@ func set_ready(ready: bool) -> void:
 func reset_to_lobby() -> void:
 	if not is_host():
 		return
-	var up := {"meta/status": "lobby", "auction": null, "teams": null, "log": null,
+	var up := {"meta/status": "lobby", "auction": null, "teams": null, "log": null, "meta/pool": null,
 		"meta/seed": randi() % 1000000}
 	for uid in state.get("players", {}):
 		up["players/%s/ready" % uid] = false

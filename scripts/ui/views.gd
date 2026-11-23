@@ -17,9 +17,9 @@ static func fill_tap(p: PanelContainer, content: Control) -> PanelContainer:
 	return UI.fill_tap(p, content)
 
 
-static func purse_bar(value: int) -> ProgressBar:
+static func purse_bar(value: int, full := Rules.PURSE) -> ProgressBar:
 	var pb := ProgressBar.new()
-	pb.max_value = Rules.PURSE
+	pb.max_value = full
 	pb.value = value
 	pb.show_percentage = false
 	pb.custom_minimum_size = Vector2(0, 6)
@@ -82,8 +82,28 @@ static func player_row(pid: String, price: int, tid := "", opts := {}) -> Contro
 		var pr := UI.display(DB.fmt_price(price) if price > 0 else "UNSOLD", 20, UI.GOLD if price > 0 else UI.RED)
 		pr.custom_minimum_size.x = 80
 		pr.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		h.add_child(pr)
+		if price > 0 and opts.get("deal", false):
+			# Steal / fair / overpaid, under the price.
+			var pv := UI.vbox(-4)
+			pv.alignment = BoxContainer.ALIGNMENT_CENTER
+			pv.add_child(pr)
+			var d := AI.deal(p, price)
+			var dl := UI.caption(d["label"], deal_color(d["key"]), 9)
+			dl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			pv.add_child(dl)
+			h.add_child(pv)
+		else:
+			h.add_child(pr)
 	return row
+
+
+static func deal_color(key: String) -> Color:
+	match key:
+		"steal": return UI.GREEN
+		"bargain": return UI.GREEN.lerp(UI.TEXT, 0.35)
+		"pricey": return UI.GOLD
+		"overpaid": return UI.RED
+	return UI.MUTED
 
 
 # ------------------------------------------------------------------ teams
@@ -135,10 +155,10 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 		for pid in xi_src:
 			tot += int(DB.player(pid)["ovr"])
 		xi_txt = str(roundi(float(tot) / xi_src.size()))
-	for cell in [["Purse left", DB.fmt_price(purse), UI.GOLD], ["Spent", DB.fmt_price(Rules.PURSE - purse), UI.TEXT],
+	for cell in [["Purse left", DB.fmt_price(purse), UI.GOLD], ["Spent", DB.fmt_price(Rules.start_purse(t) - purse), UI.TEXT],
 			["Max bid", DB.fmt_price(maxi(0, Rules.max_affordable(t))), UI.TEXT],
-			["Squad", "%d/%d" % [squad.size(), Rules.MAX_SQUAD], UI.GREEN if squad.size() >= Rules.MIN_SQUAD else UI.TEXT],
-			["Overseas", "%d/%d" % [Rules.overseas_count(t), Rules.MAX_OVERSEAS], UI.TEXT],
+			["Squad", "%d/%d" % [squad.size(), Rules.max_squad(t)], UI.GREEN if squad.size() >= Rules.min_squad(t) else UI.TEXT],
+			["Overseas", "%d/%d" % [Rules.overseas_count(t), Rules.max_overseas(t)], UI.TEXT],
 			["XI avg OVR", xi_txt, UI.TEXT]]:
 		var cv := UI.vbox(-4)
 		cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -146,23 +166,24 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 		cv.add_child(UI.display(cell[1], 24, cell[2]))
 		grid.add_child(cv)
 	hv.add_child(grid)
-	hv.add_child(purse_bar(purse))
+	hv.add_child(purse_bar(purse, Rules.start_purse(t)))
 	if not rating.is_empty():
 		hv.add_child(UI.wrap(UI.caption("Bat %.0f  •  Bowl %.0f  •  Balance %+.0f  •  Depth %.0f" % [
 			rating["batting"], rating["bowling"], rating["balance"], rating["depth"]], UI.MUTED, 10)))
 		if not rating["notes"].is_empty():
 			hv.add_child(UI.wrap(UI.label("⚠ " + ", ".join(rating["notes"]), 12, UI.soft(UI.RED, 0.25))))
-	var short := Rules.MIN_SQUAD - squad.size()
+	var short := Rules.min_squad(t) - squad.size()
 	if short > 0 and xi.is_empty():
-		hv.add_child(UI.wrap(UI.label("Needs %d more player%s to reach the minimum of %d." % [short, "" if short == 1 else "s", Rules.MIN_SQUAD], 12, UI.MUTED)))
+		hv.add_child(UI.wrap(UI.label("Needs %d more player%s to reach the minimum of %d." % [short, "" if short == 1 else "s", Rules.min_squad(t)], 12, UI.MUTED)))
 	body.add_child(hero)
 	body.add_child(UI.caption("Role balance (have / ideal)", UI.MUTED, 10))
 	var counts := AI.role_counts(t)
 	var needs := HFlowContainer.new()
 	needs.add_theme_constant_override("h_separation", 6)
 	needs.add_theme_constant_override("v_separation", 6)
+	var tg := AI.targets(t)
 	for r in ROLES:
-		needs.add_child(need_chip(r, counts[r], AI.TARGET[r], 12))
+		needs.add_child(need_chip(r, counts[r], tg[r], 12))
 	body.add_child(needs)
 	if squad.is_empty():
 		body.add_child(UI.spacer(10, 0))
@@ -180,7 +201,7 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 		body.add_child(section(opts.get("xi_title", "PLAYING XI"), "batting order"))
 		var n := 1
 		for pid in xi:
-			body.add_child(player_row(pid, int(squad.get(pid, 0)), "", {"xi": true, "num": n, "line": line_for.call(pid)}))
+			body.add_child(player_row(pid, int(squad.get(pid, 0)), "", {"xi": true, "num": n, "line": line_for.call(pid), "deal": true}))
 			n += 1
 	for role in ROLES:
 		var ids := []
@@ -197,7 +218,7 @@ static func team_page(body: VBoxContainer, tid: String, opts := {}) -> void:
 		var title: String = ROLE_TITLES[role] if xi.is_empty() else "Bench • " + ROLE_TITLES[role]
 		body.add_child(section("%s (%d)" % [title, ids.size()], DB.fmt_price(sub)))
 		for pid in ids:
-			body.add_child(player_row(pid, int(squad[pid]), "", {"line": line_for.call(pid)}))
+			body.add_child(player_row(pid, int(squad[pid]), "", {"line": line_for.call(pid), "deal": true}))
 
 
 ## Compact season numbers for a player row.
@@ -245,7 +266,7 @@ static func teams_list(body: VBoxContainer, on_open: Callable, sort := "purse") 
 		nv.add_child(nl)
 		var who := "YOU" if is_me else ("AI" if t.get("ai", false) else s.team_owner_name(tid))
 		var cnt := Rules.squad_count(t)
-		nv.add_child(UI.caption("%s  •  %d player%s  •  %d/%d overseas" % [who, cnt, "" if cnt == 1 else "s", Rules.overseas_count(t), Rules.MAX_OVERSEAS], UI.MUTED, 9))
+		nv.add_child(UI.caption("%s  •  %d player%s  •  %d/%d overseas" % [who, cnt, "" if cnt == 1 else "s", Rules.overseas_count(t), Rules.max_overseas(t)], UI.MUTED, 9))
 		h.add_child(nv)
 		var pv := UI.vbox(-4)
 		if sort == "rating":
@@ -256,7 +277,7 @@ static func teams_list(body: VBoxContainer, on_open: Callable, sort := "purse") 
 			pv.add_child(UI.display(DB.fmt_price(int(t.get("purse", 0))), 24, UI.GOLD))
 		h.add_child(pv)
 		v.add_child(h)
-		v.add_child(purse_bar(int(t.get("purse", 0))))
+		v.add_child(purse_bar(int(t.get("purse", 0)), Rules.start_purse(t)))
 		var sq: Dictionary = t.get("squad", {})
 		if not sq.is_empty():
 			var top_ids: Array = sq.keys()

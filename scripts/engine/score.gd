@@ -64,10 +64,10 @@ static func rate(team: Dictionary, xi: Array) -> Dictionary:
 	for i in mini(5, bench.size()):
 		depth += DB.player(bench[i])["ovr"]
 	depth = depth / 5.0 if bench.size() > 0 else 0.0
-	if squad.size() < Rules.MIN_SQUAD:
-		notes.append("Squad below %d" % Rules.MIN_SQUAD)
+	if squad.size() < Rules.min_squad(team):
+		notes.append("Squad below %d" % Rules.min_squad(team))
 	# Value: rating bought per crore.
-	var spent := Rules.PURSE - int(team.get("purse", Rules.PURSE))
+	var spent := Rules.start_purse(team) - int(team.get("purse", Rules.start_purse(team)))
 	var ovr_sum := 0.0
 	for id in squad:
 		ovr_sum += DB.player(id)["ovr"]

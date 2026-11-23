@@ -32,6 +32,24 @@ static func next_bid(current: int, base: int, has_bidder: bool) -> int:
 	return (current / step + 1) * step
 
 
+## Per-team limits. A full auction uses the constants above; a mini auction
+## stores its own in the team node ("lim": {purse, min, max, os}) at the start.
+static func start_purse(team: Dictionary) -> int:
+	return int(team.get("lim", {}).get("purse", PURSE))
+
+
+static func min_squad(team: Dictionary) -> int:
+	return int(team.get("lim", {}).get("min", MIN_SQUAD))
+
+
+static func max_squad(team: Dictionary) -> int:
+	return int(team.get("lim", {}).get("max", MAX_SQUAD))
+
+
+static func max_overseas(team: Dictionary) -> int:
+	return int(team.get("lim", {}).get("os", MAX_OVERSEAS))
+
+
 static func squad_count(team: Dictionary) -> int:
 	return (team.get("squad", {}) as Dictionary).size()
 
@@ -44,19 +62,19 @@ static func overseas_count(team: Dictionary) -> int:
 	return n
 
 
-## The most a team may bid while still keeping enough money to reach MIN_SQUAD.
+## The most a team may bid while still keeping enough money to reach its minimum squad.
 static func max_affordable(team: Dictionary) -> int:
 	var count := squad_count(team)
-	var slots_after := maxi(0, MIN_SQUAD - count - 1)
+	var slots_after := maxi(0, min_squad(team) - count - 1)
 	return int(team.get("purse", 0)) - slots_after * MIN_PRICE
 
 
 ## Returns "" if the bid is allowed, otherwise a human-readable reason.
 static func bid_error(team: Dictionary, player: Dictionary, amount: int) -> String:
-	if squad_count(team) >= MAX_SQUAD:
-		return "Squad full (%d)" % MAX_SQUAD
-	if player.get("overseas", false) and overseas_count(team) >= MAX_OVERSEAS:
-		return "Overseas limit reached (%d)" % MAX_OVERSEAS
+	if squad_count(team) >= max_squad(team):
+		return "Squad full (%d)" % max_squad(team)
+	if player.get("overseas", false) and overseas_count(team) >= max_overseas(team):
+		return "Overseas limit reached (%d)" % max_overseas(team)
 	if amount > int(team.get("purse", 0)):
 		return "Not enough purse"
 	if amount > max_affordable(team):

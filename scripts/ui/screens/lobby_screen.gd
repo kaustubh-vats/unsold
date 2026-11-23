@@ -107,6 +107,14 @@ func _render() -> void:
 	sp.add_child(sv)
 	var st := s.settings()
 	var host := s.is_host()
+	# Full auction or quick-play mini auction.
+	var mode: String = st.get("mode", "full")
+	sv.add_child(_setting("Auction size", UI.segmented(["Full auction", "Mini (quick play)"], ["full", "mini"],
+		mode, func(v): s.set_setting("mode", v), host)))
+	if mode == "mini":
+		sv.add_child(_mini_settings(s, st, host))
+	else:
+		sv.add_child(UI.wrap(UI.label("All %d players, 18–25 per squad, ₹120 Cr purse, up to 8 overseas." % DB.all_ids().size(), 12, UI.DIM)))
 	var diff: String = st.get("difficulty", "medium")
 	sv.add_child(_setting("AI difficulty", UI.segmented(["Easy", "Medium", "Hard"], ["easy", "medium", "hard"],
 		diff, func(v): s.set_setting("difficulty", v), host)))
@@ -164,6 +172,46 @@ func _wishlist_panel() -> Control:
 	h.add_child(v)
 	h.add_child(UI.caption("Edit ›", UI.GOLD, 11))
 	return Views.fill_tap(p, h)
+
+
+## Mini auction: pick the number of players; show what the algorithm decided.
+func _mini_settings(s: RoomStore, st: Dictionary, host: bool) -> Control:
+	var v := UI.vbox(8)
+	var plan := Auction.plan_for(s.state)
+	var n: int = plan["n"]
+	var lo := Auction.mini_min(maxi(1, Auction.human_teams(s.state).size()))
+	var row := UI.hbox(10)
+	var minus := UI.button("−", func(): s.set_setting("mini_n", maxi(lo, n - Auction.MINI_STEP)), "ghost", 22)
+	minus.custom_minimum_size = Vector2(56, 48)
+	minus.disabled = not host or n <= lo
+	row.add_child(minus)
+	var mid := UI.vbox(-4)
+	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid.add_child(UI.center(UI.display("%d PLAYERS" % n, 30, UI.GOLD)))
+	mid.add_child(UI.center(UI.caption("in the auction  •  %d–%d" % [lo, Auction.MINI_MAX], UI.MUTED, 10)))
+	row.add_child(mid)
+	var plus := UI.button("+", func(): s.set_setting("mini_n", mini(Auction.MINI_MAX, n + Auction.MINI_STEP)), "ghost", 22)
+	plus.custom_minimum_size = Vector2(56, 48)
+	plus.disabled = not host or n >= Auction.MINI_MAX
+	row.add_child(plus)
+	v.add_child(row)
+	# What the algorithm picked for that size.
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.add_theme_constant_override("h_separation", 8)
+	for cell in [["Teams", str(plan["teams"])], ["Squad", "%d–%d" % [plan["min"], plan["max"]]],
+			["Purse", DB.fmt_price(plan["purse"])], ["Overseas", "≤ %d" % plan["os"]]]:
+		var cv := UI.vbox(-4)
+		cv.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cv.add_child(UI.caption(cell[0], UI.MUTED, 9))
+		cv.add_child(UI.display(cell[1], 20, UI.TEXT))
+		grid.add_child(cv)
+	var gp := UI.panel(UI.ink(0.04), 12, 10)
+	gp.add_child(grid)
+	v.add_child(gp)
+	v.add_child(UI.wrap(UI.label("Players are drawn at random (a fair mix of roles and ratings) when the auction starts. "
+		+ "Budget, squad size and overseas slots scale with the pool.", 12, UI.DIM)))
+	return v
 
 
 func _setting(title: String, control: Control) -> Control:

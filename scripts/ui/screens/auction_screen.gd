@@ -47,6 +47,7 @@ var nav_btns := {}
 var sheet: Sheet
 
 var _lot_key := ""
+var _ff_key := ""
 var _phase := ""
 var _list_sig := ""
 var _busy := false
@@ -88,7 +89,23 @@ func _build_header() -> void:
 	set_label = UI.caption("", UI.GOLD, 12)
 	lot_label = UI.display("", 22, UI.TEXT)
 	hv.add_child(set_label)
-	hv.add_child(lot_label)
+	if Game.store.is_online():
+		# Room code on screen so anyone who drops out can rejoin; tap to copy.
+		var lr := UI.hbox(8)
+		lot_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		lot_label.clip_text = true
+		lr.add_child(lot_label)
+		var code: String = Game.store.room_code
+		var cb := UI.button("ROOM " + code, func():
+			DisplayServer.clipboard_set(code)
+			UI.toast(self, "Room code %s copied" % code, UI.GREEN), "ghost", 11)
+		cb.tooltip_text = "Copy the room code so a player can rejoin"
+		cb.custom_minimum_size = Vector2(0, 26)
+		cb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lr.add_child(cb)
+		hv.add_child(lr)
+	else:
+		hv.add_child(lot_label)
 	# Tap the set name to see every player in this set.
 	hv.mouse_filter = Control.MOUSE_FILTER_STOP
 	hv.gui_input.connect(func(e):
@@ -255,12 +272,12 @@ func _build_actions() -> void:
 	pass_btn.custom_minimum_size.y = 62
 	pass_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(pass_btn)
-	if not Game.store.is_online():
-		# Single player only: skip straight to the final bid for this player.
-		ff_btn = UI.button("▶▶", _fast_forward, "ghost", 15)
-		ff_btn.tooltip_text = "Fast-forward to the final bid"
-		ff_btn.custom_minimum_size = Vector2(70, 62)
-		row.add_child(ff_btn)
+	# Skip straight to the final bid for this player. Online it's a vote: it
+	# only happens once every connected player has tapped it.
+	ff_btn = UI.button("▶▶", _fast_forward, "ghost", 15)
+	ff_btn.tooltip_text = "Fast-forward to the final bid" if not Game.store.is_online() 		else "Vote to fast-forward: skips once every player taps it"
+	ff_btn.custom_minimum_size = Vector2(70, 62)
+	row.add_child(ff_btn)
 	add_child(row)
 	status_label = UI.center(UI.label("", 13, UI.RED, true))
 	status_label.custom_minimum_size.y = 16
@@ -452,6 +469,11 @@ func _refresh() -> void:
 	var err := Rules.bid_error(t, p, next)
 	var leading := bidder == my
 	var ff := s.fast_forwarding()
+	if ff and s.is_online() and _ff_key != _lot_key:
+		# Everyone voted: the auctioneer stops mid-sentence on every screen.
+		_ff_key = _lot_key
+		Sfx.hush()
+		say_label.text = "“Everyone's agreed — fast-forwarding to the final bid…”"
 	bid_btn.text = "YOU LEAD" if leading else "BID  %s" % DB.fmt_price(next)
 	bid_btn.disabled = phase != "bidding" or leading or err != "" or _busy or ff
 	var passed: bool = a.get("passes", {}).has(my)
@@ -459,12 +481,22 @@ func _refresh() -> void:
 	pass_btn.disabled = phase != "bidding" or leading or passed or ff
 	if ff_btn:
 		ff_btn.disabled = phase != "bidding" or ff
+		var votes := [0, 0]
+		var my_vote := false
+		if s.is_online():
+			votes = Auction.ff_votes(s.state, s.now_ms())
+			my_vote = a.get("ff", {}).has(my)
+		ff_btn.text = "▶▶ %d/%d" % votes if s.is_online() and votes[0] > 0 and not ff else "▶▶"
+		ff_btn.modulate = UI.GOLD if my_vote and not ff else Color.WHITE
 	status_label.text = err if (err != "" and phase == "bidding" and not leading) else ""
 	# Whose turn is it? Spell it out like an auctioneer would.
 	if phase != "bidding":
 		_prompt = ""
 	elif ff:
 		_prompt = "FAST-FORWARDING…"
+	elif s.is_online() and a.get("ff", {}).has(my):
+		var v := Auction.ff_votes(s.state, s.now_ms())
+		_prompt = "▶▶ VOTED — WAITING FOR %d MORE" % (v[1] - v[0])
 	elif leading:
 		_prompt = "YOU LEAD — ANY ADVANCE?"
 	elif err != "":
@@ -490,9 +522,10 @@ func _refresh() -> void:
 func _refresh_my_team(t: Dictionary) -> void:
 	var purse := int(t.get("purse", 0))
 	my_purse.text = DB.fmt_price(purse)
+	my_bar.max_value = Rules.start_purse(t)
 	my_bar.value = purse
-	my_stats["Squad"].text = "%d/%d" % [Rules.squad_count(t), Rules.MAX_SQUAD]
-	my_stats["Overseas"].text = "%d/%d" % [Rules.overseas_count(t), Rules.MAX_OVERSEAS]
+	my_stats["Squad"].text = "%d/%d" % [Rules.squad_count(t), Rules.max_squad(t)]
+	my_stats["Overseas"].text = "%d/%d" % [Rules.overseas_count(t), Rules.max_overseas(t)]
 	my_stats["Max bid"].text = DB.fmt_price(maxi(0, Rules.max_affordable(t)))
 	var counts := AI.role_counts(t)
 	var sig := str(counts)
@@ -500,8 +533,9 @@ func _refresh_my_team(t: Dictionary) -> void:
 		return
 	my_needs.set_meta("sig", sig)
 	UI.clear(my_needs)
+	var tg := AI.targets(t)
 	for r in ["WK", "BAT", "AR", "PACE", "SPIN"]:
-		my_needs.add_child(_need_chip(r, counts[r], AI.TARGET[r], 9))
+		my_needs.add_child(_need_chip(r, counts[r], tg[r], 9))
 	UI.ignore_mouse(my_needs)
 
 
@@ -647,18 +681,29 @@ func _announce_bid(amount: int, next: int, interrupt := false) -> void:
 func _show_stamp(sold: bool, team: String, price: int) -> void:
 	UI.clear(stamp_box)
 	if sold:
-		stamp_box.add_child(UI.center(UI.caption("Sold to", UI.MUTED, 12)))
+		stamp_box.add_child(UI.center(UI.caption("Sold to", UI.MUTED, 11)))
 		var row := UI.hbox(10)
 		row.alignment = BoxContainer.ALIGNMENT_CENTER
-		row.add_child(UI.crest(team, 56))
-		var rv := UI.vbox(-8)
-		rv.add_child(UI.display("SOLD!", 58, UI.GREEN))
-		rv.add_child(UI.display(DB.fmt_price(price), 28, UI.GOLD))
+		row.add_child(UI.crest(team, 48))
+		var rv := UI.vbox(-10)
+		rv.add_child(UI.display("SOLD!", 50, UI.GREEN))
+		rv.add_child(UI.display(DB.fmt_price(price), 26, UI.GOLD))
 		row.add_child(rv)
 		stamp_box.add_child(row)
 		var tname: String = DB.team(team).get("name", "")
 		stamp_box.add_child(UI.center(UI.label(tname, 14, UI.TEXT, true)))
-		say_label.text = "“Sold! To the %s, for %s!”" % [tname, DB.fmt_price(price)]
+		# Deal verdict: was that a steal or did they overpay?
+		var d := AI.deal(DB.player(Game.store.auction().get("pid", "")), price)
+		var dc := Views.deal_color(d["key"])
+		var dr := UI.hbox(8)
+		dr.alignment = BoxContainer.ALIGNMENT_CENTER
+		dr.add_child(UI.chip(d["label"], Color(dc, 0.18), dc, 12))
+		dr.add_child(UI.caption("Fair value ≈ " + DB.fmt_price(d["fair"]), UI.MUTED, 10))
+		stamp_box.add_child(dr)
+		var quips := {"steal": "What a steal!", "bargain": "Good business, that.",
+			"fair": "", "pricey": "They've paid a premium there.", "overpaid": "That's a lot of money!"}
+		var q: String = quips[d["key"]]
+		say_label.text = "“Sold! To the %s, for %s!%s”" % [tname, DB.fmt_price(price), (" " + q) if q != "" else ""]
 		Sfx.play("sold")
 		Sfx.duck(1.6)
 		get_tree().create_timer(0.35).timeout.connect(func(): Sfx.say_sold(team))
@@ -789,7 +834,7 @@ func _fill_set(body: VBoxContainer, _sh: Sheet) -> void:
 		var sold: Array = groups["sold"].duplicate()
 		sold.reverse()
 		for e in sold:
-			body.add_child(Views.player_row(e["pid"], int(e["price"]), e["team"], {"star": Game.is_wished(e["pid"])}))
+			body.add_child(Views.player_row(e["pid"], int(e["price"]), e["team"], {"star": Game.is_wished(e["pid"]), "deal": true}))
 	if not groups["unsold"].is_empty():
 		body.add_child(Views.section("UNSOLD", str(groups["unsold"].size())))
 		for e in groups["unsold"]:
@@ -806,7 +851,7 @@ func _fill_log(body: VBoxContainer, _sh: Sheet) -> void:
 		return
 	for k in keys.slice(0, 120):
 		var e: Dictionary = log[k]
-		body.add_child(Views.player_row(e["pid"], int(e.get("price", 0)), e.get("team", "")))
+		body.add_child(Views.player_row(e["pid"], int(e.get("price", 0)), e.get("team", ""), {"deal": true}))
 
 
 # ------------------------------------------------------------------ actions
@@ -833,6 +878,11 @@ func _pass() -> void:
 
 
 func _fast_forward() -> void:
+	if Game.store.is_online():
+		await Game.store.fast_forward()
+		if is_instance_valid(self):
+			_refresh()
+		return
 	Sfx.hush()
 	say_label.text = "“Fast-forwarding to the final bid…”"
 	Game.store.fast_forward()
